@@ -216,6 +216,32 @@ tbody td.b{color:var(--accent)}
 
 @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .card,.kpi{animation:fadeUp .5s ease both}
+
+/* ─── CURRENCY ─── */
+.cur-btns{display:flex;gap:3px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:3px}
+.cur-btn{background:transparent;border:none;border-radius:6px;padding:5px 10px;font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;transition:all .2s}
+.cur-btn.active{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(59,130,246,.4)}
+.cur-edit{background:transparent;border:none;color:var(--text3);cursor:pointer;font-size:14px;padding:4px 6px;transition:color .2s;line-height:1}
+.cur-edit:hover{color:var(--accent)}
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);z-index:500;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-lg);padding:28px;width:340px;max-width:90vw;box-shadow:var(--shadow);transform:translateY(10px);transition:transform .25s}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;margin-bottom:6px}
+.modal-sub{font-size:12px;color:var(--text3);margin-bottom:22px}
+.modal-row{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.modal-flag{font-size:22px;width:30px;text-align:center}
+.modal-label{flex:1;font-size:13px;font-weight:500;color:var(--text2)}
+.modal-input{width:90px;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;padding:7px 10px;text-align:right;-moz-appearance:textfield}
+.modal-input::-webkit-inner-spin-button{display:none}
+.modal-input:focus{outline:none;border-color:var(--accent)}
+.modal-btns{display:flex;gap:8px;margin-top:20px}
+.modal-btn{flex:1;padding:10px;border-radius:8px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;border:none}
+.modal-btn.primary{background:var(--accent);color:#fff}
+.modal-btn.primary:hover{background:#2563eb}
+.modal-btn.secondary{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+.modal-btn.secondary:hover{border-color:var(--accent);color:var(--accent)}
 </style>
 </head>
 <body>
@@ -230,10 +256,44 @@ tbody td.b{color:var(--accent)}
     </div>
   </div>
   <div class="topbar-actions">
+    <div class="cur-btns" id="cur-btns">
+      <button class="cur-btn active" data-cur="CZK">Kč</button>
+      <button class="cur-btn" data-cur="EUR">€</button>
+      <button class="cur-btn" data-cur="USD">$</button>
+    </div>
+    <button class="cur-edit tbtn" onclick="openCurModal()" title="Upravit kurzy">✏️ Kurzy</button>
     <button class="tbtn" onclick="shareURL()">🔗 Sdílet</button>
     <button class="tbtn" id="theme-btn" onclick="toggleTheme()">☀️ Světlý</button>
   </div>
 </div>
+
+<!-- CURRENCY MODAL -->
+<div class="modal-overlay" id="cur-modal">
+  <div class="modal">
+    <div class="modal-title">💱 Kurzy měn</div>
+    <div class="modal-sub">Zadejte kolik Kč odpovídá 1 jednotce cizí měny</div>
+    <div class="modal-row">
+      <div class="modal-flag">🇪🇺</div>
+      <div class="modal-label">1 EUR =</div>
+      <input class="modal-input" type="number" id="cur-eur" value="25" min="1" step="0.1">
+      <div style="font-size:12px;color:var(--text3)">Kč</div>
+    </div>
+    <div class="modal-row">
+      <div class="modal-flag">🇺🇸</div>
+      <div class="modal-label">1 USD =</div>
+      <input class="modal-input" type="number" id="cur-usd" value="23" min="1" step="0.1">
+      <div style="font-size:12px;color:var(--text3)">Kč</div>
+    </div>
+    <div style="background:var(--surface2);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--text3);margin-top:4px">
+      💡 Kurzy nejsou živé — aktualizujte dle ČNB dle potřeby. Výpočty vždy probíhají v Kč, měna slouží jen pro zobrazení.
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn secondary" onclick="closeCurModal()">Zrušit</button>
+      <button class="modal-btn primary" onclick="saveCurRates()">Uložit kurzy</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <div class="page">
@@ -650,11 +710,43 @@ tbody td.b{color:var(--accent)}
 <script>
 /* ══ HELPERS ══ */
 const $=id=>document.getElementById(id);
-// Czech number formatting
 const fmtN=v=>new Intl.NumberFormat('cs-CZ',{maximumFractionDigits:0}).format(Math.round(v));
-const fmt=v=>fmtN(v)+' Kč';
-const fmtM=v=>fmt(v)+'/měs.';
 const fmtP=v=>v.toFixed(1)+' %';
+
+/* ══ CURRENCY ══ */
+const CUR={active:'CZK',rates:{CZK:1,EUR:25,USD:23}};
+const CUR_SYMBOLS={CZK:'Kč',EUR:'€',USD:'$'};
+
+function curRate(){return CUR.rates[CUR.active];}
+function fmtCur(czk){
+  const v=czk/curRate(),sym=CUR_SYMBOLS[CUR.active];
+  const n=new Intl.NumberFormat('cs-CZ',{maximumFractionDigits:0}).format(Math.round(v));
+  return CUR.active==='CZK'?n+' '+sym:sym+' '+n;
+}
+function fmtCurM(czk){return fmtCur(czk)+'/měs.';}
+const fmt=v=>fmtCur(v);
+const fmtM=v=>fmtCurM(v);
+
+function openCurModal(){
+  $('cur-eur').value=CUR.rates.EUR;
+  $('cur-usd').value=CUR.rates.USD;
+  $('cur-modal').classList.add('open');
+}
+function closeCurModal(){$('cur-modal').classList.remove('open');}
+function saveCurRates(){
+  CUR.rates.EUR=parseFloat($('cur-eur').value)||25;
+  CUR.rates.USD=parseFloat($('cur-usd').value)||23;
+  closeCurModal();
+  showToast('✅ Kurzy uloženy — EUR: '+CUR.rates.EUR+' Kč, USD: '+CUR.rates.USD+' Kč');
+  rerender();
+}
+$('cur-modal').addEventListener('click',e=>{if(e.target===$('cur-modal'))closeCurModal();});
+document.querySelectorAll('#cur-btns .cur-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#cur-btns .cur-btn').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  CUR.active=b.dataset.cur;
+  rerender();
+}));
 
 /* ══ NAVIGATION ══ */
 document.querySelectorAll('.ntab').forEach(b=>b.addEventListener('click',()=>{
@@ -718,6 +810,9 @@ function buildURL(){
   const tab=document.querySelector('.ntab.active').dataset.view;
   p.set('tab',tab);
   if(document.body.classList.contains('light'))p.set('theme','light');
+  p.set('cur',CUR.active);
+  p.set('eur',CUR.rates.EUR);
+  p.set('usd',CUR.rates.USD);
   const map={iS,rS,fS,mS,cS,feS};
   Object.entries(URL_MAP).forEach(([k,[obj,prop]])=>{const v=map[obj][prop];if(v!==undefined)p.set(k,v);});
   return location.href.split('?')[0]+'?'+p.toString();
@@ -731,6 +826,10 @@ function loadURL(){
   });
   syncDOM();
   if(p.get('theme')==='light'){document.body.classList.add('light');const b=$('theme-btn');if(b)b.textContent='🌙 Tmavý';}
+  // Currency
+  if(p.has('cur')){CUR.active=p.get('cur');document.querySelectorAll('#cur-btns .cur-btn').forEach(b=>b.classList.toggle('active',b.dataset.cur===CUR.active));}
+  if(p.has('eur'))CUR.rates.EUR=parseFloat(p.get('eur'))||25;
+  if(p.has('usd'))CUR.rates.USD=parseFloat(p.get('usd'))||23;
   return p.get('tab')||'invest';
 }
 function shareURL(){
@@ -1150,7 +1249,15 @@ function syncDOM(){
   $('fe-rL').textContent=feS.rate+' %';$('fe-yL').textContent=feS.years+' let';
 }
 
-function rerender(){const v=document.querySelector('.ntab.active').dataset.view;({invest:uI,retire:uR,fire:uF,mortgage:uM,fees:uFe,compare:uC,sens:uS})[v]();}
+function rerender(){
+  // Update all .iunit labels to current currency symbol
+  const sym=CUR_SYMBOLS[CUR.active];
+  document.querySelectorAll('.iunit').forEach(el=>{
+    if(el.textContent==='Kč'||el.textContent==='€'||el.textContent==='$') el.textContent=sym;
+  });
+  const v=document.querySelector('.ntab.active').dataset.view;
+  ({invest:uI,retire:uR,fire:uF,mortgage:uM,fees:uFe,compare:uC,sens:uS})[v]();
+}
 window.addEventListener('resize',rerender);
 
 // INIT
@@ -1161,3 +1268,4 @@ document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==
 </script>
 </body>
 </html>
+
