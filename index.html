@@ -285,7 +285,7 @@ tbody td.b{color:var(--accent)}
       <div style="font-size:12px;color:var(--text3)">Kč</div>
     </div>
     <div style="background:var(--surface2);border-radius:8px;padding:10px 14px;font-size:11px;color:var(--text3);margin-top:4px">
-      💡 Kurzy nejsou živé — aktualizujte dle ČNB dle potřeby. Výpočty vždy probíhají v Kč, měna slouží jen pro zobrazení.
+      💡 Kurzy nejsou živé — aktualizujte dle ČNB. Zadejte kolik Kč odpovídá 1 EUR / 1 USD. Vše se přepočítá okamžitě.
     </div>
     <div class="modal-btns">
       <button class="modal-btn secondary" onclick="closeCurModal()">Zrušit</button>
@@ -734,10 +734,11 @@ function openCurModal(){
 }
 function closeCurModal(){$('cur-modal').classList.remove('open');}
 function saveCurRates(){
+  // Store old rate to reconvert state if needed
   CUR.rates.EUR=parseFloat($('cur-eur').value)||25;
   CUR.rates.USD=parseFloat($('cur-usd').value)||23;
   closeCurModal();
-  showToast('✅ Kurzy uloženy — EUR: '+CUR.rates.EUR+' Kč, USD: '+CUR.rates.USD+' Kč');
+  showToast('✅ Kurzy: 1 EUR = '+CUR.rates.EUR+' Kč, 1 USD = '+CUR.rates.USD+' Kč');
   rerender();
 }
 $('cur-modal').addEventListener('click',e=>{if(e.target===$('cur-modal'))closeCurModal();});
@@ -770,9 +771,14 @@ function calcFV(init,monthly,freq,rateYr,years,inflYr,tax,bonusAmt,bonusYr,crise
       let crisis=null;
       if(crises)crises.forEach(c=>{if(Math.round(yr)===c.yr){bal*=(1-c.drop/100);crisis=c;}});
       const infF=Math.pow(1+inflYr/100,yr);
-      const net=inv+(bal-inv)*(1-tax/100);
+      // net = after tax on gains
+      const gross=bal;
+      const gains=Math.max(0,gross-inv);
+      const net=inv+gains*(1-tax/100);
+      // real = net deflated by inflation
+      const real=net/infF;
       if(!beYear&&net>0&&(net-inv)>=inv)beYear=yr;
-      data.push({yr,inv,bal,net,real:net/infF,crisis});
+      data.push({yr,inv,bal:gross,net,real,crisis});
     }
   }
   return{data,beYear};
@@ -854,7 +860,8 @@ const feS={init:200000,mon:8000,rate:8,years:30,t1:0.2,t2:1.5,t3:2.5};
 
 /* ══ BINDINGS HELPERS ══ */
 function bR(id,sk,lId,u,st,fn){const e=$(id),l=$(lId);if(!e||!l)return;e.addEventListener('input',()=>{st[sk]=parseFloat(e.value);l.textContent=e.value+(u?' '+u:'');fn();});}
-function bN(id,sk,st,fn){const e=$(id);if(!e)return;e.addEventListener('input',()=>{st[sk]=parseFloat(e.target.value)||0;fn();});}
+function bN(id,sk,st,fn){const e=$(id);if(!e)return;e.addEventListener('input',()=>{st[sk]=(parseFloat(e.value)||0)*curRate();fn();});}
+function bNR(id,sk,st,fn){const e=$(id);if(!e)return;e.addEventListener('input',()=>{st[sk]=parseFloat(e.value)||0;fn();});}
 function chips(sel,fn){document.querySelectorAll(sel+' .chip').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll(sel+' .chip').forEach(x=>x.classList.remove('on'));b.classList.add('on');fn(b);}));}
 
 /* ══ INVEST ══ */
@@ -866,9 +873,11 @@ function uI(){
   if(!data.length)return;
   const l=data[data.length-1],ll=dL[dL.length-1],lh=dH[dH.length-1];
   $('i-yrs').textContent=iS.years;
-  $('i-total').textContent=fmt(l.net);$('i-real').textContent='reálně: '+fmt(l.real);
-  $('i-inv').textContent=fmt(l.inv);$('i-profit').textContent='+'+fmt(l.net-l.inv);
-  $('i-mult').textContent=(l.net/l.inv).toFixed(2)+'x zhodnocení';
+  $('i-total').textContent=fmt(l.net);$('i-real').textContent='reálně (po inflaci): '+fmt(l.real);
+  $('i-inv').textContent=fmt(l.inv);
+  const realProfit=l.real-l.inv;
+  $('i-profit').textContent=(realProfit>=0?'+':'')+fmt(realProfit);
+  $('i-mult').textContent=(l.real/l.inv).toFixed(2)+'x reálné zhodnocení';
   $('i-be').textContent=beYear?beYear+'. rok':'> '+iS.years+' let';
   $('i-sl').textContent=fmt(ll.net);$('i-slr').textContent=fmtP(Math.max(.5,iS.rate-3))+' výnos';
   $('i-sm').textContent=fmt(l.net);$('i-smr').textContent=fmtP(iS.rate)+' výnos';
@@ -931,7 +940,7 @@ function uR(){
 }
 bR('r-rate','rate','r-rL','%',rS,uR);bR('r-infl','infl','r-iL','%',rS,uR);bR('r-tax','tax','r-tL','%',rS,uR);
 bR('r-wr','wr','r-wrL','%',rS,uR);
-bN('r-age','age',rS,uR);bN('r-ret','ret',rS,uR);bN('r-dur','dur',rS,uR);
+bNR('r-age','age',rS,uR);bNR('r-ret','ret',rS,uR);bNR('r-dur','dur',rS,uR);
 bN('r-income','income',rS,uR);bN('r-state','state',rS,uR);bN('r-cur','cur',rS,uR);bN('r-mon','mon',rS,uR);bN('r-bonus','bonus',rS,uR);
 $('r-byr-r').addEventListener('input',e=>{rS.bonusYr=+e.target.value;$('r-byr').textContent=rS.bonusYr;uR();});
 $('r-cryr').addEventListener('input',e=>{rS.cryr=+e.target.value;$('r-cry').textContent=rS.cryr;uR();});
@@ -1042,7 +1051,7 @@ function uFe(){
 }
 bR('fe-rate','rate','fe-rL','%',feS,uFe);bR('fe-years','years','fe-yL','let',feS,uFe);
 bN('fe-init','init',feS,uFe);bN('fe-mon','mon',feS,uFe);
-['fe-t1','fe-t2','fe-t3'].forEach((id,i)=>$(id).addEventListener('input',e=>{feS[`t${i+1}`]=parseFloat(e.target.value)||0;uFe();}));
+['fe-t1','fe-t2','fe-t3'].forEach((id,i)=>{const e=$(id);if(e)e.addEventListener('input',()=>{feS[`t${i+1}`]=parseFloat(e.value)||0;uFe();});});
 
 /* ══ COMPARE ══ */
 const ASSETS=[
@@ -1087,7 +1096,7 @@ function uS(){
   });
   $('s-table').innerHTML=html+'</tbody>';
 }
-bN('s-init','init',sS,uS);bN('s-mon','mon',sS,uS);bN('s-tax','tax',sS,uS);
+bN('s-init','init',sS,uS);bN('s-mon','mon',sS,uS);bNR('s-tax','tax',sS,uS);
 document.querySelectorAll('#s-cols .chip').forEach(b=>b.addEventListener('click',()=>{b.classList.toggle('on');uS();}));
 document.querySelectorAll('#s-rows .chip').forEach(b=>b.addEventListener('click',()=>{b.classList.toggle('on');uS();}));
 chips('#s-mode',b=>{sMode=b.dataset.mode;uS();});
@@ -1227,34 +1236,62 @@ function exportPDF(view){
 
 /* ══ SYNC DOM ══ */
 function syncDOM(){
-  const sv=(id,v)=>{const e=$(id);if(e)e.value=v;};
-  sv('i-init',iS.init);sv('i-mon',iS.mon);sv('i-rate',iS.rate);sv('i-years',iS.years);sv('i-infl',iS.infl);sv('i-tax',iS.tax);sv('i-bonus',iS.bonus);sv('i-byr-r',iS.bonusYr);
-  $('i-rL').textContent=iS.rate+' %';$('i-yL').textContent=iS.years+' let';$('i-iL').textContent=iS.infl+' %';$('i-tL').textContent=iS.tax+' %';$('i-byr').textContent=iS.bonusYr;
+  const r=curRate();
+  const sv=(id,czk)=>{const e=$(id);if(e&&czk!=null)e.value=Math.round((czk||0)/r);};
+  const svR=(id,v)=>{const e=$(id);if(e&&v!=null)e.value=v;};
+
+  sv('i-init',iS.init);sv('i-mon',iS.mon);svR('i-rate',iS.rate);svR('i-years',iS.years);
+  svR('i-infl',iS.infl);svR('i-tax',iS.tax);sv('i-bonus',iS.bonus);svR('i-byr-r',iS.bonusYr);
+  $('i-rL').textContent=iS.rate+' %';$('i-yL').textContent=iS.years+' let';
+  $('i-iL').textContent=iS.infl+' %';$('i-tL').textContent=iS.tax+' %';$('i-byr').textContent=iS.bonusYr;
   document.querySelectorAll('#i-fbtn .chip').forEach(b=>b.classList.toggle('on',+b.dataset.freq===iS.freq));
   document.querySelectorAll('#i-ctog .chip').forEach(b=>b.classList.toggle('on',+b.dataset.crisis===iS.cc));
   $('i-cbox').style.display=iS.cc>0?'':'none';$('i-c2box').style.display=iS.cc>=2?'':'none';
-  sv('i-c1yr',iS.c1yr);$('i-c1y').textContent=iS.c1yr;sv('i-c1dp',iS.c1dp);$('i-c1d').textContent='−'+iS.c1dp+' %';
-  sv('i-c2yr',iS.c2yr);$('i-c2y').textContent=iS.c2yr;sv('i-c2dp',iS.c2dp);$('i-c2d').textContent='−'+iS.c2dp+' %';
-  sv('r-age',rS.age);sv('r-ret',rS.ret);sv('r-dur',rS.dur);sv('r-income',rS.income);sv('r-state',rS.state);sv('r-cur',rS.cur);sv('r-mon',rS.mon);sv('r-rate',rS.rate);sv('r-infl',rS.infl);sv('r-tax',rS.tax);sv('r-wr',rS.wr);sv('r-bonus',rS.bonus);sv('r-byr-r',rS.bonusYr);
-  $('r-rL').textContent=rS.rate+' %';$('r-iL').textContent=rS.infl+' %';$('r-tL').textContent=rS.tax+' %';$('r-wrL').textContent=rS.wr+' %';$('r-byr').textContent=rS.bonusYr;
+  svR('i-c1yr',iS.c1yr);$('i-c1y').textContent=iS.c1yr;svR('i-c1dp',iS.c1dp);$('i-c1d').textContent='−'+iS.c1dp+' %';
+  svR('i-c2yr',iS.c2yr);$('i-c2y').textContent=iS.c2yr;svR('i-c2dp',iS.c2dp);$('i-c2d').textContent='−'+iS.c2dp+' %';
+
+  svR('r-age',rS.age);svR('r-ret',rS.ret);svR('r-dur',rS.dur);
+  sv('r-income',rS.income);sv('r-state',rS.state);sv('r-cur',rS.cur);sv('r-mon',rS.mon);
+  svR('r-rate',rS.rate);svR('r-infl',rS.infl);svR('r-tax',rS.tax);svR('r-wr',rS.wr);
+  sv('r-bonus',rS.bonus);svR('r-byr-r',rS.bonusYr);
+  $('r-rL').textContent=rS.rate+' %';$('r-iL').textContent=rS.infl+' %';
+  $('r-tL').textContent=rS.tax+' %';$('r-wrL').textContent=rS.wr+' %';$('r-byr').textContent=rS.bonusYr;
   document.querySelectorAll('#r-ctog .chip').forEach(b=>b.classList.toggle('on',+b.dataset.crisis===(rS.crisis?1:0)));
   $('r-cbox').style.display=rS.crisis?'':'none';
-  sv('r-cryr',rS.cryr);if($('r-cry'))$('r-cry').textContent=rS.cryr;sv('r-crdp',rS.crdp);if($('r-crd'))$('r-crd').textContent='−'+rS.crdp+' %';
-  sv('f-spend',fS.spend);sv('f-other',fS.other);sv('f-swr',fS.swr);sv('f-infl',fS.infl);sv('f-cur',fS.cur);sv('f-save',fS.save);sv('f-rate',fS.rate);
+  svR('r-cryr',rS.cryr);if($('r-cry'))$('r-cry').textContent=rS.cryr;
+  svR('r-crdp',rS.crdp);if($('r-crd'))$('r-crd').textContent='−'+rS.crdp+' %';
+
+  sv('f-spend',fS.spend);sv('f-other',fS.other);svR('f-swr',fS.swr);svR('f-infl',fS.infl);
+  sv('f-cur',fS.cur);sv('f-save',fS.save);svR('f-rate',fS.rate);
   $('f-swrL').textContent=fS.swr+' %';$('f-iL').textContent=fS.infl+' %';$('f-rL').textContent=fS.rate+' %';
-  sv('m-price',mS.price);sv('m-down',mS.down);sv('m-rate',mS.rate);sv('m-years',mS.years);sv('m-extra',mS.extra);sv('m-eyr-r',mS.extYr);sv('m-rent',mS.rent);sv('m-rg',mS.rentGrow);sv('m-ap',mS.appre);sv('m-mn',mS.maint);
-  $('m-rL').textContent=mS.rate+' %';$('m-yL').textContent=mS.years+' let';$('m-eyr').textContent=mS.extYr;$('m-rgL').textContent=mS.rentGrow+' %';$('m-apL').textContent=mS.appre+' %';$('m-mnL').textContent=mS.maint+' %';
-  sv('c-init',cS.init);sv('c-mon',cS.mon);sv('c-years',cS.years);sv('c-tax',cS.tax);$('c-yL').textContent=cS.years+' let';$('c-tL').textContent=cS.tax+' %';
-  sv('fe-init',feS.init);sv('fe-mon',feS.mon);sv('fe-rate',feS.rate);sv('fe-years',feS.years);sv('fe-t1',feS.t1);sv('fe-t2',feS.t2);sv('fe-t3',feS.t3);
+
+  sv('m-price',mS.price);sv('m-down',mS.down);svR('m-rate',mS.rate);svR('m-years',mS.years);
+  sv('m-extra',mS.extra);svR('m-eyr-r',mS.extYr);sv('m-rent',mS.rent);
+  svR('m-rg',mS.rentGrow);svR('m-ap',mS.appre);svR('m-mn',mS.maint);
+  $('m-rL').textContent=mS.rate+' %';$('m-yL').textContent=mS.years+' let';
+  $('m-eyr').textContent=mS.extYr;$('m-rgL').textContent=mS.rentGrow+' %';
+  $('m-apL').textContent=mS.appre+' %';$('m-mnL').textContent=mS.maint+' %';
+
+  sv('c-init',cS.init);sv('c-mon',cS.mon);svR('c-years',cS.years);svR('c-tax',cS.tax);
+  $('c-yL').textContent=cS.years+' let';$('c-tL').textContent=cS.tax+' %';
+
+  sv('fe-init',feS.init);sv('fe-mon',feS.mon);svR('fe-rate',feS.rate);svR('fe-years',feS.years);
+  svR('fe-t1',feS.t1);svR('fe-t2',feS.t2);svR('fe-t3',feS.t3);
   $('fe-rL').textContent=feS.rate+' %';$('fe-yL').textContent=feS.years+' let';
+
+  sv('s-init',sS.init);sv('s-mon',sS.mon);svR('s-tax',sS.tax);
+
+  // Update all currency unit labels
+  const sym=CUR_SYMBOLS[CUR.active];
+  document.querySelectorAll('.iunit').forEach(el=>{
+    const t=el.textContent;
+    if(t==='Kč'||t==='€'||t==='$') el.textContent=sym;
+    else if(t==='Kč/m'||t==='€/m'||t==='$/m') el.textContent=sym+'/m';
+  });
 }
 
 function rerender(){
-  // Update all .iunit labels to current currency symbol
-  const sym=CUR_SYMBOLS[CUR.active];
-  document.querySelectorAll('.iunit').forEach(el=>{
-    if(el.textContent==='Kč'||el.textContent==='€'||el.textContent==='$') el.textContent=sym;
-  });
+  syncDOM();
   const v=document.querySelector('.ntab.active').dataset.view;
   ({invest:uI,retire:uR,fire:uF,mortgage:uM,fees:uFe,compare:uC,sens:uS})[v]();
 }
@@ -1268,4 +1305,3 @@ document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==
 </script>
 </body>
 </html>
-
