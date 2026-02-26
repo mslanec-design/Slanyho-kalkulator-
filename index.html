@@ -305,6 +305,7 @@ tbody td.b{color:var(--accent)}
     <button class="ntab" data-view="retire"><span class="ntab-icon">🏖️</span>Důchod</button>
     <button class="ntab" data-view="fire"><span class="ntab-icon">🔥</span>FIRE číslo</button>
     <button class="ntab" data-view="mortgage"><span class="ntab-icon">🏠</span>Hypotéka</button>
+    <button class="ntab" data-view="buyvrent"><span class="ntab-icon">🏠</span>Vlastní bydlení vs Nájem</button>
     <button class="ntab" data-view="fees"><span class="ntab-icon">💸</span>Vliv poplatků</button>
     <button class="ntab" data-view="compare"><span class="ntab-icon">⚖️</span>Porovnání</button>
     <button class="ntab" data-view="sens"><span class="ntab-icon">🔢</span>Citlivost</button>
@@ -705,6 +706,86 @@ tbody td.b{color:var(--accent)}
   </div>
 </div>
 
+<!-- ══════════ VIEW: BUY vs RENT ══════════ -->
+<div class="view" id="view-buyvrent">
+  <div class="sec-head">
+    <div class="sec-title">🏠 Vlastní bydlení vs. Nájem + Investice</div>
+    <div class="sec-sub">Co se více vyplatí? Hypotéka na vlastní byt, nebo nájem a investování rozdílu do ETF?</div>
+  </div>
+
+  <div class="g2" style="margin-bottom:16px">
+    <!-- SCENARIO A: BUY -->
+    <div class="card">
+      <div class="card-title" style="color:var(--gold)">🏠 Scénář A — Koupě na hypotéku</div>
+      <div class="field"><label class="flabel">Cena nemovitosti</label><div class="irow"><input type="number" id="bvr-price" value="5000000" step="100000"><span class="iunit">Kč</span></div></div>
+      <div class="field"><label class="flabel">Vlastní zdroje (akontace)</label><div class="irow"><input type="number" id="bvr-down" value="1000000" step="50000"><span class="iunit">Kč</span></div></div>
+      <div class="field"><label class="flabel">Úroková sazba — <span id="bvr-mrL" style="color:var(--accent)">5.5 %</span></label>
+        <input type="range" id="bvr-mr" min="1" max="15" step="0.1" value="5.5"><div class="rrow"><span>1 %</span><span>15 %</span></div></div>
+      <div class="field"><label class="flabel">Délka hypotéky — <span id="bvr-myL" style="color:var(--accent)">30 let</span></label>
+        <input type="range" id="bvr-my" min="5" max="40" step="1" value="30"><div class="rrow"><span>5</span><span>40</span></div></div>
+      <div class="field"><label class="flabel">Roční zhodnocení nemovitosti — <span id="bvr-apL">3 %</span></label>
+        <input type="range" id="bvr-ap" min="0" max="12" step="0.5" value="3"><div class="rrow"><span>0 %</span><span>12 %</span></div></div>
+      <div class="field"><label class="flabel">Roční náklady (údržba, daně, pojistka) — <span id="bvr-mnL">1 %</span></label>
+        <input type="range" id="bvr-mn" min="0" max="3" step="0.25" value="1"><div class="rrow"><span>0 %</span><span>3 %</span></div></div>
+      <div class="hbox gold" style="margin-top:14px">
+        <div class="hbox-label">Měsíční splátka hypotéky</div>
+        <div class="hbox-val" id="bvr-pmt">—</div>
+        <div class="hbox-sub" id="bvr-pmtsub">—</div>
+      </div>
+    </div>
+
+    <!-- SCENARIO B: RENT + INVEST -->
+    <div class="card">
+      <div class="card-title" style="color:var(--accent)">📈 Scénář B — Nájem + Investice do ETF</div>
+      <div class="field"><label class="flabel">Měsíční nájem</label><div class="irow"><input type="number" id="bvr-rent" value="18000" step="500"><span class="iunit">Kč/m</span></div></div>
+      <div class="field"><label class="flabel">Roční růst nájmu — <span id="bvr-rgL">3 %</span></label>
+        <input type="range" id="bvr-rg" min="0" max="10" step="0.5" value="3"><div class="rrow"><span>0 %</span><span>10 %</span></div></div>
+      <div class="field"><label class="flabel">Roční výnos ETF — <span id="bvr-erL" style="color:var(--accent)">7 %</span></label>
+        <input type="range" id="bvr-er" min="1" max="20" step="0.5" value="7"><div class="rrow"><span>1 %</span><span>20 %</span></div></div>
+      <div class="field"><label class="flabel">Daň z výnosu — <span id="bvr-etL">15 %</span></label>
+        <input type="range" id="bvr-et" min="0" max="30" step="1" value="15"><div class="rrow"><span>0 %</span><span>30 %</span></div></div>
+      <hr class="sep">
+      <div class="card-title">⚙️ Společné</div>
+      <div class="field"><label class="flabel">Horizont — <span id="bvr-yL" style="color:var(--accent)">30 let</span></label>
+        <input type="range" id="bvr-y" min="5" max="40" step="1" value="30"><div class="rrow"><span>5</span><span>40</span></div></div>
+      <div class="field"><label class="flabel">Inflace — <span id="bvr-iL">2.5 %</span></label>
+        <input type="range" id="bvr-i" min="0" max="10" step="0.5" value="2.5"><div class="rrow"><span>0 %</span><span>10 %</span></div></div>
+      <div style="background:var(--accent-dim);border:1px solid var(--accent);border-radius:10px;padding:12px 14px;font-size:11px;color:var(--text2);margin-top:8px;line-height:1.7">
+        💡 <strong>Logika:</strong> Ve scénáři B investuješ každý měsíc rozdíl <em>(splátka hypotéky + náklady − nájem)</em> do ETF. Plus akontaci investuješ hned. Srovnáváme čisté jmění obou scénářů v čase.
+      </div>
+    </div>
+  </div>
+
+  <!-- VERDICT -->
+  <div class="status warn" id="bvr-verdict" style="margin-bottom:16px">
+    <div class="status-icon" id="bvr-vi">⏳</div>
+    <div><div class="status-label">Výsledek po <span id="bvr-yrs">30</span> letech</div><div class="status-text" id="bvr-vt">Počítám…</div></div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="g4" style="margin-bottom:16px">
+    <div class="kpi gold"><div class="kpi-label">🏠 Čisté jmění — Koupě</div><div class="kpi-val gold" id="bvr-nwb">—</div><div class="kpi-sub" id="bvr-nwbsub">—</div></div>
+    <div class="kpi accent"><div class="kpi-label">📈 Čisté jmění — Nájem+ETF</div><div class="kpi-val blue" id="bvr-nwr">—</div><div class="kpi-sub" id="bvr-nwrsub">—</div></div>
+    <div class="kpi"><div class="kpi-label">Rozdíl</div><div class="kpi-val" id="bvr-diff">—</div><div class="kpi-sub" id="bvr-diffsub">—</div></div>
+    <div class="kpi"><div class="kpi-label">Break-even rok</div><div class="kpi-val orange" id="bvr-be">—</div><div class="kpi-sub">rok, od kdy koupě trvale vede</div></div>
+  </div>
+
+  <div class="g2" style="margin-bottom:16px">
+    <div class="kpi"><div class="kpi-label">Celkem zaplaceno na hypotéce</div><div class="kpi-val red" id="bvr-totpaid">—</div><div class="kpi-sub" id="bvr-totint">—</div></div>
+    <div class="kpi"><div class="kpi-label">Investováno v ETF scénáři</div><div class="kpi-val green" id="bvr-totinv">—</div><div class="kpi-sub" id="bvr-totinvsub">—</div></div>
+  </div>
+
+  <!-- CHART -->
+  <div class="card wide">
+    <div class="card-title">📊 Vývoj čistého jmění — Koupě vs. Nájem+ETF</div>
+    <div class="chart-wrap" style="height:280px"><canvas id="bvr-chart"></canvas></div>
+    <div class="twrap"><table>
+      <thead><tr><th>Rok</th><th>🏠 Hodnota nem.</th><th>🏠 Dluh</th><th>🏠 Nelikvidní</th><th>🏠 ETF (po splacení)</th><th>🏠 Celkem</th><th>📈 Nájem+ETF</th><th>Rozdíl</th></tr></thead>
+      <tbody id="bvr-tb"></tbody>
+    </table></div>
+  </div>
+</div>
+
 </div><!-- /page -->
 
 <script>
@@ -756,7 +837,7 @@ document.querySelectorAll('.ntab').forEach(b=>b.addEventListener('click',()=>{
   const v=b.dataset.view;
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
   $('view-'+v).classList.add('active');
-  ({invest:uI,retire:uR,fire:uF,mortgage:uM,fees:uFe,compare:uC,sens:uS})[v]();
+  ({invest:uI,retire:uR,fire:uF,mortgage:uM,buyvrent:uBvr,fees:uFe,compare:uC,sens:uS})[v]();
 }));
 
 /* ══ CORE CALC ══ */
@@ -810,6 +891,9 @@ const URL_MAP={
   ci:['cS','init'],cm:['cS','mon'],cy:['cS','years'],ct:['cS','tax'],
   fei:['feS','init'],fem:['feS','mon'],fer:['feS','rate'],fey:['feS','years'],
   fe1:['feS','t1'],fe2:['feS','t2'],fe3:['feS','t3'],
+  bp:['bvrS','price'],bd:['bvrS','down'],bmr:['bvrS','mr'],bmy:['bvrS','my'],
+  bap:['bvrS','ap'],bmn:['bvrS','mn'],brt:['bvrS','rent'],brg:['bvrS','rg'],
+  ber:['bvrS','er'],bet:['bvrS','et'],by:['bvrS','years'],bi:['bvrS','infl'],
 };
 function buildURL(){
   const p=new URLSearchParams();
@@ -1053,7 +1137,190 @@ bR('fe-rate','rate','fe-rL','%',feS,uFe);bR('fe-years','years','fe-yL','let',feS
 bN('fe-init','init',feS,uFe);bN('fe-mon','mon',feS,uFe);
 ['fe-t1','fe-t2','fe-t3'].forEach((id,i)=>{const e=$(id);if(e)e.addEventListener('input',()=>{feS[`t${i+1}`]=parseFloat(e.value)||0;uFe();});});
 
-/* ══ COMPARE ══ */
+/* ══ BUY vs RENT ══ */
+const bvrS={price:5000000,down:1000000,mr:5.5,my:30,ap:3,mn:1,rent:18000,rg:3,er:7,et:15,years:30,infl:2.5};
+
+function uBvr(){
+  const s=bvrS,r=curRate();
+  const loan=s.price-s.down;
+  const mr=s.mr/100/12,n=s.my*12;
+  const pmt=n>0&&mr>0?loan*mr*Math.pow(1+mr,n)/(Math.pow(1+mr,n)-1):loan/n;
+  const totalPaid=pmt*s.my*12;
+  const totalInt=totalPaid-loan;
+
+  $('bvr-pmt').textContent=fmt(pmt);
+  $('bvr-pmtsub').textContent='z toho úroky celkem: '+fmt(totalInt);
+  $('bvr-yrs').textContent=s.years;
+
+  const buyData=[], rentData=[];
+  let bal=loan, propVal=s.price;
+  let etfBal=s.down;       // Scénář B: akontace hned do ETF
+  let buyEtfBal=0;         // Scénář A: investice po splacení hypotéky
+  let rentPay=s.rent;
+  let totalPaidSoFar=0, totalInvested=s.down;
+  const etfR=s.er/100/12;
+  const annualMaint=s.price*(s.mn/100);
+
+  for(let y=1;y<=s.years;y++){
+    // ── SCÉNÁŘ A: KOUPĚ ──
+    propVal*=(1+s.ap/100);
+    const mortgageActive=bal>0;
+    let yInt=0;
+    for(let m=0;m<12;m++){
+      if(bal>0){const i=bal*mr;const p=Math.min(pmt-i,bal);yInt+=i;bal=Math.max(0,bal-p);}
+    }
+    totalPaidSoFar+=(mortgageActive?pmt*12:0)+annualMaint;
+
+    // Po splacení hypotéky — kupující investuje bývalou splátku do ETF
+    if(!mortgageActive){
+      for(let m=0;m<12;m++){buyEtfBal*=(1+etfR);buyEtfBal+=pmt;}
+    }
+    const buyGains=Math.max(0,buyEtfBal-pmt*12*Math.max(0,y-s.my));
+    const buyEtfNet=buyEtfBal>0?buyEtfBal-buyGains*(s.et/100):0;
+    const buyNW=propVal-bal+buyEtfNet; // nemovitost + likvidní ETF po dani
+    const buyLiquid=buyEtfNet;         // jen likvidní část
+    const buyIlliquid=propVal-bal;     // jen nemovitost
+
+    // ── SCÉNÁŘ B: NÁJEM + ETF ──
+    // Investuje: rozdíl (splátka+údržba-nájem) dokud hypotéka běží, poté jen pokračuje
+    const monthlySave=Math.max(0,(mortgageActive?pmt:0)+(annualMaint/12)-rentPay);
+    for(let m=0;m<12;m++){etfBal*=(1+etfR);etfBal+=monthlySave;}
+    totalInvested+=monthlySave*12;
+    const rentGains=Math.max(0,etfBal-totalInvested);
+    const rentNW=etfBal-rentGains*(s.et/100);
+
+    rentPay*=(1+s.rg/100);
+
+    buyData.push({y,propVal,bal,buyNW,buyLiquid,buyIlliquid,rentNW,diff:buyNW-rentNW,mortgageDone:!mortgageActive});
+    rentData.push({y,etfBal:rentNW});
+  }
+
+  const lb=buyData[buyData.length-1];
+  const winner=lb.buyNW>=lb.rentNW;
+
+  let beYear=null;
+  if(winner){
+    for(let i=buyData.length-1;i>=0;i--){
+      if(buyData[i].buyNW<buyData[i].rentNW){beYear=buyData[i+1]?.y||1;break;}
+      if(i===0)beYear=buyData[0].y;
+    }
+  }
+
+  // Verdict
+  const vd=$('bvr-verdict'),vt=$('bvr-vt'),vi=$('bvr-vi');
+  const diff=Math.abs(lb.buyNW-lb.rentNW);
+  const mortYr=s.years>s.my?s.my:null;
+  if(winner){
+    vd.className='status ok';vi.textContent='🏠';
+    vt.innerHTML=`<strong>Koupě vítězí</strong> o <strong>${fmt(diff)}</strong>. 
+      Nemovitost: <strong>${fmt(lb.buyIlliquid)}</strong> + ETF po splacení: <strong>${fmt(lb.buyLiquid)}</strong>.
+      ${mortYr?`Po splacení v roce ${mortYr} kupující investoval uvolněné splátky dál.`:''}`;
+  } else {
+    vd.className='status warn';vi.textContent='📈';
+    vt.innerHTML=`<strong>Nájem + ETF vítězí</strong> o <strong>${fmt(diff)}</strong>. 
+      ETF portfolio: <strong>${fmt(lb.rentNW)}</strong> (plně likvidní) vs. koupě: <strong>${fmt(lb.buyIlliquid)}</strong> v nemovitosti + <strong>${fmt(lb.buyLiquid)}</strong> v ETF.
+      ${mortYr?`Kupující investoval po splacení hypotéky v roce ${mortYr} uvolněné splátky — přesto nestačí.`:''}`;
+  }
+
+  $('bvr-nwb').textContent=fmt(lb.buyNW);
+  $('bvr-nwbsub').textContent=`🏠 ${fmt(lb.buyIlliquid)} + 📈 ${fmt(lb.buyLiquid)} likvidní`;
+  $('bvr-nwr').textContent=fmt(lb.rentNW);
+  $('bvr-nwrsub').textContent='100% likvidní ETF portfolio';
+  $('bvr-diff').textContent=(lb.buyNW>=lb.rentNW?'+':'-')+fmt(diff);
+  $('bvr-diff').className='kpi-val '+(winner?'gold':'blue');
+  $('bvr-diffsub').textContent=winner?'ve prospěch koupě':'ve prospěch nájmu';
+  $('bvr-be').textContent=beYear?beYear+'. rok':'Nenastane v horizontu';
+  $('bvr-be').className='kpi-val '+(beYear?'orange':'red');
+  $('bvr-totpaid').textContent=fmt(totalPaidSoFar);
+  $('bvr-totint').textContent='z toho úroky: '+fmt(totalInt);
+  $('bvr-totinv').textContent=fmt(totalInvested);
+  $('bvr-totinvsub').textContent='celkem investováno do ETF (nájem)';
+
+  drawBvr('bvr-chart',buyData);
+
+  $('bvr-tb').innerHTML=buyData.map((d,i)=>{
+    const win=d.buyNW>=d.rentNW;
+    return`<tr${d.y===beYear?' class=hl':d.mortgageDone&&buyData[i-1]&&!buyData[i-1].mortgageDone?' class=hl':''}>
+      <td>${d.y}${d.mortgageDone&&buyData[i-1]&&!buyData[i-1].mortgageDone?' 🎉':''}${d.y===s.my?' ✅ splaceno':''}</td>
+      <td>${fmt(d.propVal)}</td>
+      <td class="${d.bal>0?'r':'g'}">${d.bal>0?fmt(d.bal):'—'}</td>
+      <td class=b>${fmt(d.buyIlliquid)}</td>
+      <td class=v>${fmt(d.buyLiquid)}</td>
+      <td class="${win?'g':'b'}">${fmt(d.buyNW)}</td>
+      <td class=g>${fmt(rentData[i].etfBal)}</td>
+      <td class="${d.diff>=0?'g':'r'}">${d.diff>=0?'+':''}${fmt(d.diff)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function drawBvr(id,buyData){
+  const{ctx,W,H}=setupCanvas(id);
+  const P={t:24,r:20,b:34,l:72};const cH=H-P.t-P.b,cW=W-P.l-P.r,n=buyData.length;if(!n)return;
+  const buyNW=buyData.map(d=>d.buyNW);
+  const buyIll=buyData.map(d=>d.buyIlliquid);
+  const rentNW=buyData.map(d=>d.rentNW);
+  const maxV=Math.max(...buyNW,...rentNW)*1.08;
+  const xp=i=>P.l+(i/Math.max(1,n-1))*cW,yp=v=>P.t+cH-(Math.max(0,v)/maxV)*cH;
+  ctx.clearRect(0,0,W,H);drawGrid(ctx,P,W,H,maxV);
+
+  // Illiquid property area (stacked bottom)
+  ctx.beginPath();ctx.moveTo(xp(0),yp(buyIll[0]));for(let i=1;i<n;i++)ctx.lineTo(xp(i),yp(buyIll[i]));
+  ctx.lineTo(xp(n-1),yp(0));ctx.lineTo(xp(0),yp(0));ctx.closePath();
+  ctx.fillStyle='rgba(245,158,11,.13)';ctx.fill();
+
+  // Rent area
+  ctx.beginPath();ctx.moveTo(xp(0),yp(rentNW[0]));for(let i=1;i<n;i++)ctx.lineTo(xp(i),yp(rentNW[i]));
+  ctx.lineTo(xp(n-1),yp(0));ctx.lineTo(xp(0),yp(0));ctx.closePath();
+  ctx.fillStyle='rgba(59,130,246,.08)';ctx.fill();
+
+  // Buy total line (includes ETF after mortgage)
+  ctx.beginPath();ctx.moveTo(xp(0),yp(buyNW[0]));for(let i=1;i<n;i++)ctx.lineTo(xp(i),yp(buyNW[i]));
+  ctx.strokeStyle='#f59e0b';ctx.lineWidth=2.5;ctx.setLineDash([]);ctx.stroke();
+
+  // Buy illiquid line (dashed)
+  ctx.beginPath();ctx.moveTo(xp(0),yp(buyIll[0]));for(let i=1;i<n;i++)ctx.lineTo(xp(i),yp(buyIll[i]));
+  ctx.strokeStyle='rgba(245,158,11,.5)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]);
+
+  // Rent line
+  ctx.beginPath();ctx.moveTo(xp(0),yp(rentNW[0]));for(let i=1;i<n;i++)ctx.lineTo(xp(i),yp(rentNW[i]));
+  ctx.strokeStyle='#3b82f6';ctx.lineWidth=2.5;ctx.stroke();
+
+  // Mark mortgage payoff year
+  const mortYr=buyData.findIndex((d,i)=>i>0&&buyData[i-1].bal>0&&d.bal===0);
+  if(mortYr>=0){
+    const mx=xp(mortYr);
+    ctx.strokeStyle='rgba(16,185,129,.6)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(mx,P.t);ctx.lineTo(mx,P.t+cH);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='rgba(16,185,129,.85)';ctx.font='10px Outfit';ctx.textAlign='center';
+    ctx.fillText('✅ hypotéka splacena',mx,P.t+8);
+  }
+
+  ctx.fillStyle='#64748b';ctx.font='10px Outfit';ctx.textAlign='center';
+  const st=Math.max(1,Math.round(n/8));
+  for(let i=0;i<n;i+=st)ctx.fillText(buyData[i].y+'r',xp(i),H-P.b+18);
+
+  const leg=[['#f59e0b',false,'🏠 Koupě (celkem)'],['rgba(245,158,11,.6)',true,'🏠 Jen nemovitost'],['#3b82f6',false,'📈 Nájem+ETF']];
+  const sp=Math.min(160,(W-P.l-P.r)/leg.length);
+  leg.forEach((it,i)=>{
+    const lx=P.l+8+i*sp;ctx.strokeStyle=it[0];ctx.lineWidth=it[1]?1.5:2.5;
+    it[1]?ctx.setLineDash([4,3]):ctx.setLineDash([]);
+    ctx.beginPath();ctx.moveTo(lx,P.t+16);ctx.lineTo(lx+14,P.t+16);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle=it[0];ctx.textAlign='left';ctx.font='10px Outfit';ctx.fillText(it[2],lx+18,P.t+20);
+  });
+}
+
+bR('bvr-mr','mr','bvr-mrL','%',bvrS,uBvr);
+bR('bvr-my','my','bvr-myL','let',bvrS,uBvr);
+bR('bvr-ap','ap','bvr-apL','%',bvrS,uBvr);
+bR('bvr-mn','mn','bvr-mnL','%',bvrS,uBvr);
+bR('bvr-rg','rg','bvr-rgL','%',bvrS,uBvr);
+bR('bvr-er','er','bvr-erL','%',bvrS,uBvr);
+bR('bvr-et','et','bvr-etL','%',bvrS,uBvr);
+bR('bvr-y','years','bvr-yL','let',bvrS,uBvr);
+bR('bvr-i','infl','bvr-iL','%',bvrS,uBvr);
+bN('bvr-price','price',bvrS,uBvr);
+bN('bvr-down','down',bvrS,uBvr);
+bN('bvr-rent','rent',bvrS,uBvr);
 const ASSETS=[
   {name:'Spořicí účet',rate:3.5,color:'#64748b'},{name:'Dluhopisy',rate:5,color:'#60a5fa'},
   {name:'Smíšené portfolio',rate:6.5,color:'#a78bfa'},{name:'Globální ETF',rate:7.5,color:'#f59e0b'},
@@ -1281,6 +1548,14 @@ function syncDOM(){
 
   sv('s-init',sS.init);sv('s-mon',sS.mon);svR('s-tax',sS.tax);
 
+  sv('bvr-price',bvrS.price);sv('bvr-down',bvrS.down);sv('bvr-rent',bvrS.rent);
+  svR('bvr-mr',bvrS.mr);svR('bvr-my',bvrS.my);svR('bvr-ap',bvrS.ap);svR('bvr-mn',bvrS.mn);
+  svR('bvr-rg',bvrS.rg);svR('bvr-er',bvrS.er);svR('bvr-et',bvrS.et);svR('bvr-y',bvrS.years);svR('bvr-i',bvrS.infl);
+  $('bvr-mrL').textContent=bvrS.mr+' %';$('bvr-myL').textContent=bvrS.my+' let';
+  $('bvr-apL').textContent=bvrS.ap+' %';$('bvr-mnL').textContent=bvrS.mn+' %';
+  $('bvr-rgL').textContent=bvrS.rg+' %';$('bvr-erL').textContent=bvrS.er+' %';
+  $('bvr-etL').textContent=bvrS.et+' %';$('bvr-yL').textContent=bvrS.years+' let';$('bvr-iL').textContent=bvrS.infl+' %';
+
   // Update all currency unit labels
   const sym=CUR_SYMBOLS[CUR.active];
   document.querySelectorAll('.iunit').forEach(el=>{
@@ -1293,7 +1568,7 @@ function syncDOM(){
 function rerender(){
   syncDOM();
   const v=document.querySelector('.ntab.active').dataset.view;
-  ({invest:uI,retire:uR,fire:uF,mortgage:uM,fees:uFe,compare:uC,sens:uS})[v]();
+  ({invest:uI,retire:uR,fire:uF,mortgage:uM,buyvrent:uBvr,fees:uFe,compare:uC,sens:uS})[v]();
 }
 window.addEventListener('resize',rerender);
 
@@ -1301,7 +1576,8 @@ window.addEventListener('resize',rerender);
 const startTab=loadURL();
 document.querySelectorAll('.ntab').forEach(b=>b.classList.toggle('active',b.dataset.view===startTab));
 document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+startTab));
-({invest:uI,retire:uR,fire:uF,mortgage:uM,fees:uFe,compare:uC,sens:uS})[startTab]();
+({invest:uI,retire:uR,fire:uF,mortgage:uM,buyvrent:uBvr,fees:uFe,compare:uC,sens:uS})[startTab]();
 </script>
 </body>
 </html>
+
