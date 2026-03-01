@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="theme-color" content="#1e293b"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>Zdraví Tracker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:#0f172a;color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif}
+input[type=number]::-webkit-inner-spin-button{opacity:1}
+input[type=date]{color-scheme:dark}
+#header{background:#1e293b;border-bottom:1px solid #1e3a5f;padding:14px 16px;padding-top:max(14px,env(safe-area-inset-top));font-size:18px;font-weight:700}
+#content{padding:14px 12px 90px;max-width:800px;margin:0 auto}
+#nav{position:fixed;bottom:0;left:0;right:0;background:#1e293b;border-top:1px solid #1e3a5f;display:flex;padding-bottom:max(10px,env(safe-area-inset-bottom))}
+.nav-btn{flex:1;background:transparent;border:none;cursor:pointer;padding:8px 4px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;font-weight:600;color:#64748b;border-top:2px solid transparent}
+.nav-btn.active{color:#60a5fa;border-top-color:#3b82f6}
+.nav-icon{font-size:20px}
+.view{display:none}.view.active{display:block}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:14px}
+.card{background:#1e293b;border:1px solid #334155;border-radius:12px;padding:11px 12px;cursor:pointer}
+.card.selected{background:#1e3a5f}
+.card-label{font-size:9px;color:#64748b;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+.card-val{font-size:20px;font-weight:700;line-height:1}
+.card-unit{font-size:10px;color:#64748b;margin-top:2px}
+.card-sub{font-size:10px;margin-top:3px;font-weight:600}
+.chart-box{background:#1e293b;border:1px solid #334155;border-radius:14px;padding:16px 12px 12px;margin-bottom:12px}
+.chart-box.keto{background:#1a0b2e;border-color:#6b21a8}
+.chart-title{font-size:13px;font-weight:600;color:#94a3b8;margin-bottom:12px}
+.chart-wrap{position:relative;width:100%;height:230px}
+.progress-wrap{padding:10px 4px 4px}
+.progress-labels{display:flex;justify-content:space-between;font-size:10px;color:#64748b;margin-bottom:5px}
+.progress-bar{height:6px;border-radius:4px;background:#1e3a5f;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(to right,#60a5fa,#34d399);border-radius:4px}
+.progress-text{text-align:center;font-size:11px;color:#94a3b8;margin-top:4px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;padding:8px 0 0;font-size:11px}
+.keto-legend{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px;font-size:10px}
+.form-box{background:#1e293b;border:1px solid #334155;border-radius:14px;padding:18px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+@media(max-width:380px){.form-grid{grid-template-columns:1fr}}
+label{display:block;font-size:10px;color:#64748b;font-weight:700;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+input{width:100%;background:#0f172a;border:1px solid #334155;border-radius:8px;padding:11px 12px;color:#f1f5f9;font-size:15px;outline:none}
+input:focus{border-color:#3b82f6}
+.keto-bar{margin-top:10px;position:relative;height:8px;border-radius:5px;overflow:hidden;background:linear-gradient(to right,#334155 0 12.5%,#e879f9 12.5% 37.5%,#c026d3 37.5% 75%,#f59e0b 75% 87.5%,#f87171 87.5%)}
+.keto-dot{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:#fff;border:2px solid #0f172a;box-shadow:0 0 0 2px #e879f9;transform:translate(-50%,-50%);display:none}
+.keto-ticks{display:flex;justify-content:space-between;font-size:10px;color:#475569;margin-top:3px}
+.save-btn{margin-top:20px;width:100%;padding:14px;border-radius:10px;border:none;background:#3b82f6;color:#fff;font-weight:700;font-size:16px;cursor:pointer}
+.save-btn.ok{background:#16a34a}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:collapse;min-width:460px;font-size:12px}
+thead tr{background:#1e3a5f}
+th{padding:9px 10px;text-align:left;color:#94a3b8;font-weight:600;font-size:10px;text-transform:uppercase;white-space:nowrap}
+tbody tr:nth-child(even){background:#162032}
+tbody tr:nth-child(odd){background:#1e293b}
+td{padding:8px 10px;white-space:nowrap;color:#e2e8f0}
+.btn-sm{background:transparent;border:1px solid #334155;border-radius:5px;padding:2px 7px;cursor:pointer;font-size:12px}
+</style>
+</head>
+<body>
+<div id="header">❤️ Zdraví Tracker</div>
+<div id="content">
+  <div id="view-grafy" class="view active">
+    <div class="cards" id="cards"></div>
+    <div id="chart-area"></div>
+  </div>
+  <div id="view-zadani" class="view">
+    <div class="form-box">
+      <h2 style="margin-bottom:16px;font-size:17px">Zadat hodnoty</h2>
+      <label>Datum</label>
+      <input type="date" id="f-date"/>
+      <div class="form-grid">
+        <div><label>Váha (kg)</label><input type="number" step="0.1" id="f-vaha" placeholder="98.0"/></div>
+        <div><label>Pas (cm)</label><input type="number" step="0.5" id="f-pas" placeholder="102"/></div>
+        <div><label>Cukr nalačno</label><input type="number" step="0.1" id="f-cukr" placeholder="5.5"/></div>
+        <div><label>Tep (bpm)</label><input type="number" step="1" id="f-tep" placeholder="60"/></div>
+        <div><label>Tlak systola</label><input type="number" step="1" id="f-tlak_sys" placeholder="130"/></div>
+        <div><label>Tlak diastola</label><input type="number" step="1" id="f-tlak_dia" placeholder="85"/></div>
+      </div>
+      <div style="margin-top:14px">
+        <label style="display:flex;align-items:center">🫧 Ketony (mmol/l)
+          <span id="keto-lbl" style="font-size:11px;font-weight:700;margin-left:8px"></span>
+        </label>
+        <input type="number" step="0.1" min="0" max="10" id="f-ketony" placeholder="0.0"/>
+        <div class="keto-bar"><div class="keto-dot" id="keto-dot"></div></div>
+        <div class="keto-ticks"><span>0</span><span>0.5</span><span>1.5</span><span>3.0</span><span>4+</span></div>
+      </div>
+      <button class="save-btn" id="save-btn" onclick="saveRecord()">Uložit záznam</button>
+    </div>
+  </div>
+  <div id="view-tabulka" class="view">
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Datum</th><th>Váha</th><th>Pas</th><th>Cukr</th><th>Ketony</th><th>Tlak</th><th>Tep</th><th></th></tr></thead>
+        <tbody id="tbl-body"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<nav id="nav">
+  <button class="nav-btn active" onclick="showView('grafy',this)"><span class="nav-icon">📈</span>Grafy</button>
+  <button class="nav-btn" onclick="showView('zadani',this)"><span class="nav-icon">✏️</span>Zadat</button>
+  <button class="nav-btn" onclick="showView('tabulka',this)"><span class="nav-icon">📋</span>Tabulka</button>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+const KEY="zdravi-v1", VAHA_CIL=88;
+const SEED=[
+  {date:"2026-02-01",vaha:98.0,pas:105.5,cukr:6.1,ketony:0.6,tlak_sys:138,tlak_dia:84,tep:60},
+  {date:"2026-02-08",vaha:97.3,pas:103.0,cukr:5.5,ketony:null,tlak_sys:129,tlak_dia:70,tep:58},
+  {date:"2026-02-15",vaha:98.0,pas:103.0,cukr:6.0,ketony:0.7,tlak_sys:128,tlak_dia:78,tep:60},
+  {date:"2026-02-22",vaha:95.5,pas:102.0,cukr:6.3,ketony:0.5,tlak_sys:139,tlak_dia:74,tep:60},
+];
+function ld(){try{const d=localStorage.getItem(KEY);return d?JSON.parse(d):SEED;}catch{return SEED;}}
+function sd(d){try{localStorage.setItem(KEY,JSON.stringify(d));}catch{}}
+let records=ld(), activeCard="vaha", charts={};
+
+function ketoSt(v){
+  if(v==null)return null;
+  if(v<0.5) return{label:"Mimo ketózu",color:"#64748b",icon:"○"};
+  if(v<=1.5)return{label:"Lehká ketóza",color:"#e879f9",icon:"◑"};
+  if(v<=3.0)return{label:"Nutriční ketóza ✓",color:"#c026d3",icon:"●"};
+  if(v<=5.0)return{label:"Hluboká ketóza",color:"#f59e0b",icon:"⬤"};
+  return{label:"Pozor",color:"#f87171",icon:"⚠"};
+}
+function sorted(){return[...records].sort((a,b)=>a.date.localeCompare(b.date));}
+function latest(){const s=sorted();return s[s.length-1];}
+function fmtDate(d){return new Date(d+'T12:00:00').toLocaleDateString('cs-CZ',{day:'2-digit',month:'2-digit'});}
+
+function showView(name,btn){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('view-'+name).classList.add('active');btn.classList.add('active');
+  if(name==='tabulka')renderTable();
+  if(name==='grafy')renderAll();
+  if(name==='zadani'&&!document.getElementById('f-date').value)
+    document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
+}
+function selectCard(key){activeCard=key;renderCards();renderChart();}
+
+/* ── CARDS ── */
+function renderCards(){
+  const lat=latest();
+  if(!lat){document.getElementById('cards').innerHTML='';return;}
+  const defs=[
+    {key:'vaha',  label:'Váha',         color:'#60a5fa'},
+    {key:'pas',   label:'Pas',          color:'#f59e0b'},
+    {key:'cukr',  label:'Cukr nalačno', color:'#34d399',refMax:5.6,refMin:3.9,unit:'mmol/l'},
+    {key:'ketony',label:'Ketony',       color:'#e879f9',unit:'mmol/l'},
+    {key:'tlak',  label:'Tlak',         color:'#f87171'},
+    {key:'tep',   label:'Tep',          color:'#a78bfa',refMax:100,refMin:50,unit:'bpm'},
+  ];
+  document.getElementById('cards').innerHTML=defs.map(d=>{
+    let valH='',subH='';
+    if(d.key==='tlak'){
+      const s=lat.tlak_sys,di=lat.tlak_dia,bad=(s&&s>130)||(di&&di>85);
+      valH=`<span style="color:#f87171">${s??'–'}</span><span style="color:#475569;font-size:13px">/</span><span style="color:#fb923c">${di??'–'}</span>`;
+      subH=`<div class="card-unit">mmHg${bad?' <span style="color:#f87171">⚠</span>':''}</div>`;
+    } else if(d.key==='ketony'){
+      const v=lat.ketony,ks=ketoSt(v);
+      valH=`<span style="color:${d.color}">${v??'–'}</span>`;
+      subH=`<div class="card-unit">mmol/l</div>${ks?`<div class="card-sub" style="color:${ks.color}">${ks.icon} ${ks.label}</div>`:''}`;
+    } else if(d.key==='vaha'){
+      const v=lat.vaha,diff=v!=null?(v-VAHA_CIL).toFixed(1):null;
+      valH=`<span style="color:${d.color}">${v??'–'}</span>`;
+      subH=`<div class="card-unit">kg</div>${diff!==null?`<div class="card-sub" style="color:${parseFloat(diff)<=0?'#34d399':'#94a3b8'}">${parseFloat(diff)<=0?'✓ Cíl!':'↓ '+diff+' kg'}</div>`:''}`;
+    } else {
+      const v=lat[d.key],bad=(d.refMax&&v>d.refMax)||(d.refMin&&v<d.refMin);
+      valH=`<span style="color:${d.color}">${v??'–'}</span>`;
+      subH=`<div class="card-unit">${d.unit||''}${bad?' <span style="color:#f87171">⚠</span>':''}</div>`;
+    }
+    const sel=activeCard===d.key;
+    const bc=sel?(d.key==='tlak'?'#f87171':d.color):'#334155';
+    return `<div class="card${sel?' selected':''}" style="border-color:${bc}" onclick="selectCard('${d.key}')">
+      <div class="card-label">${d.label}</div>
+      <div class="card-val">${valH}</div>${subH}</div>`;
+  }).join('');
+}
+
+/* ── CHART CORE ── */
+// Zóna jako dataset: flat čára na yVal pro každý label, fill mezi dvěma datasety
+function zoneDataset(labels, yVal, color, fillTarget){
+  return{
+    data: labels.map(()=>yVal),
+    borderColor: color,
+    borderWidth: 1.5,
+    borderDash: [6,4],
+    backgroundColor: color,
+    fill: fillTarget !== undefined ? fillTarget : false,
+    pointRadius: 0,
+    pointHoverRadius: 0,
+    tension: 0,
+    spanGaps: true,
+    order: 0  // vykreslí se pod daty
+  };
+}
+
+const BASE={
+  responsive:true, maintainAspectRatio:false,
+  interaction:{mode:'index',intersect:false},
+  plugins:{
+    legend:{display:false},
+    tooltip:{
+      backgroundColor:'#1e293b',borderColor:'#334155',borderWidth:1,
+      titleColor:'#94a3b8',bodyColor:'#e2e8f0',padding:10,
+      filter: item => item.dataset.pointRadius !== 0  // skryj tooltip zón
+    }
+  },
+  scales:{
+    x:{grid:{color:'#1e3a5f'},ticks:{color:'#64748b',font:{size:11}}},
+    y:{grid:{color:'#1e3a5f'},ticks:{color:'#64748b',font:{size:11}}}
+  },
+  elements:{point:{radius:5,hoverRadius:7},line:{tension:0.3}}
+};
+
+function killCharts(){Object.values(charts).forEach(c=>{try{c.destroy();}catch{}});charts={};}
+function mkCanvas(id){return `<div class="chart-wrap"><canvas id="${id}"></canvas></div>`;}
+function ctx(id){return document.getElementById(id).getContext('2d');}
+
+/* ── VÁHA ── */
+function chartVaha(s, labels){
+  const vals=s.map(r=>r.vaha);
+  const allV=vals.filter(Boolean);
+  const yMin=allV.length?Math.min(...allV,VAHA_CIL)-5:80;
+  const yMax=allV.length?Math.max(...allV)+4:105;
+  const lat=latest(), start=SEED[0].vaha, cur=lat?.vaha;
+  const pct=cur!=null?Math.min(Math.max((start-cur)/(start-VAHA_CIL)*100,0),100):0;
+
+  document.getElementById('chart-area').innerHTML=`<div class="chart-box">
+    <div class="chart-title">Váha <span style="color:#64748b;font-size:11px">(kg)</span>
+      <span style="color:#34d399;font-size:11px;margin-left:10px">🎯 cíl ${VAHA_CIL} kg</span></div>
+    ${mkCanvas('cv')}
+    <div class="progress-wrap">
+      <div class="progress-labels">
+        <span>Start: ${start} kg</span>
+        <span style="color:#60a5fa;font-weight:600">Nyní: ${cur??'–'} kg</span>
+        <span style="color:#34d399">Cíl: ${VAHA_CIL} kg</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct.toFixed(1)}%"></div></div>
+      <div class="progress-text">${pct.toFixed(0)}% k cíli · zbývá ${cur!=null?(cur-VAHA_CIL).toFixed(1):'?'} kg</div>
+    </div>
+  </div>`;
+
+  // dataset 0: horní okraj zóny (VAHA_CIL+2) — fill: '+1' = fill dolů k datasetu 1
+  // dataset 1: dolní okraj zóny (VAHA_CIL-2)
+  // dataset 2: cílová čára (VAHA_CIL)
+  // dataset 3: data
+  charts.v=new Chart(ctx('cv'),{
+    type:'line',
+    data:{labels, datasets:[
+      {...zoneDataset(labels, VAHA_CIL+2, 'rgba(52,211,153,0)', '+1'), backgroundColor:'rgba(52,211,153,0.15)'},
+      {...zoneDataset(labels, VAHA_CIL-2, 'rgba(52,211,153,0)', false)},
+      {...zoneDataset(labels, VAHA_CIL, '#34d399', false), borderDash:[6,3]},
+      {
+        data:vals, label:'Váha', order:1,
+        borderColor:'#60a5fa', backgroundColor:'rgba(96,165,250,.15)',
+        fill:true, borderWidth:2.5,
+        pointBackgroundColor:'#60a5fa', pointRadius:5, pointHoverRadius:7,
+        spanGaps:true, tension:0.3
+      }
+    ]},
+    options:{...BASE,
+      scales:{...BASE.scales,y:{...BASE.scales.y,min:yMin,max:yMax}},
+      plugins:{...BASE.plugins,tooltip:{...BASE.plugins.tooltip,
+        filter:item=>item.datasetIndex===3
+      }}
+    }
+  });
+}
+
+/* ── TLAK ── */
+function chartTlak(s, labels){
+  document.getElementById('chart-area').innerHTML=`<div class="chart-box">
+    <div class="chart-title">Krevní tlak <span style="color:#64748b;font-size:11px">(mmHg)</span>
+      <span style="color:#f87171;font-size:11px;margin-left:10px">⚠ cíl &lt;130/85</span></div>
+    ${mkCanvas('ct')}
+    <div class="legend">
+      <span style="color:#f87171">● Systola (cíl &lt;130)</span>
+      <span style="color:#fb923c">● Diastola (cíl &lt;85)</span>
+    </div>
+  </div>`;
+
+  const sys=s.map(r=>r.tlak_sys), dia=s.map(r=>r.tlak_dia);
+
+  // dataset 0: sys limit (130) — čárkovaná
+  // dataset 1: dia limit (85) — čárkovaná
+  // dataset 2: systola data
+  // dataset 3: diastola data
+  charts.t=new Chart(ctx('ct'),{
+    type:'line',
+    data:{labels, datasets:[
+      {...zoneDataset(labels,130,'#f87171',false), borderDash:[5,4]},
+      {...zoneDataset(labels,85,'#fb923c',false), borderDash:[5,4]},
+      {
+        data:sys, label:'Systola', order:1,
+        borderColor:'#f87171', fill:false, borderWidth:2.5,
+        pointBackgroundColor:'#f87171', pointRadius:5, pointHoverRadius:7,
+        spanGaps:true, tension:0.3
+      },
+      {
+        data:dia, label:'Diastola', order:1,
+        borderColor:'#fb923c', fill:false, borderWidth:2.5,
+        pointBackgroundColor:'#fb923c', pointRadius:5, pointHoverRadius:7,
+        spanGaps:true, tension:0.3
+      }
+    ]},
+    options:{...BASE,
+      scales:{...BASE.scales,y:{...BASE.scales.y,min:60,max:160}},
+      plugins:{...BASE.plugins,tooltip:{...BASE.plugins.tooltip,
+        filter:item=>item.datasetIndex>=2
+      }}
+    }
+  });
+}
+
+/* ── KETONY ── */
+function chartKetony(s, labels){
+  document.getElementById('chart-area').innerHTML=`<div class="chart-box keto">
+    <div class="chart-title" style="color:#e879f9">🫧 Ketony <span style="color:#64748b;font-weight:400;font-size:11px">(mmol/l)</span></div>
+    <div class="keto-legend">
+      <span style="color:#475569">● <span style="color:#64748b">&lt;0.5</span> Mimo</span>
+      <span style="color:#e879f9">● <span style="color:#64748b">0.5–1.5</span> Lehká</span>
+      <span style="color:#c026d3">● <span style="color:#64748b">1.5–3.0</span> Nutriční ✓</span>
+      <span style="color:#f59e0b">● <span style="color:#64748b">&gt;3.0</span> Hluboká</span>
+    </div>
+    ${mkCanvas('ck')}
+  </div>`;
+
+  const vals=s.map(r=>r.ketony);
+  const ptC=vals.map(v=>{const ks=ketoSt(v);return ks?ks.color:'#e879f9';});
+
+  // dataset 0: horní okraj nutriční zóny (3.0) fill dolů k datasetu 1
+  // dataset 1: dolní okraj nutriční zóny (0.5)
+  // dataset 2: hluboká čára (3.0)
+  // dataset 3: start ketózy (0.5)
+  // dataset 4: data
+  charts.k=new Chart(ctx('ck'),{
+    type:'line',
+    data:{labels, datasets:[
+      {...zoneDataset(labels,3.0,'rgba(124,58,237,0)','+1'), backgroundColor:'rgba(124,58,237,0.2)'},
+      {...zoneDataset(labels,0.5,'rgba(124,58,237,0)',false)},
+      {...zoneDataset(labels,3.0,'#f59e0b',false), borderDash:[5,4]},
+      {...zoneDataset(labels,0.5,'#e879f9',false), borderDash:[5,4]},
+      {
+        data:vals, label:'Ketony', order:1,
+        borderColor:'#e879f9', backgroundColor:'rgba(192,38,211,.15)',
+        fill:true, borderWidth:2.5,
+        pointBackgroundColor:ptC, pointRadius:6, pointHoverRadius:8,
+        spanGaps:true, tension:0.3
+      }
+    ]},
+    options:{...BASE,
+      scales:{...BASE.scales,y:{...BASE.scales.y,min:0,max:4,
+        ticks:{...BASE.scales.y.ticks, stepSize:0.5}}},
+      plugins:{...BASE.plugins,tooltip:{...BASE.plugins.tooltip,
+        filter:item=>item.datasetIndex===4
+      }}
+    }
+  });
+}
+
+/* ── CUKR ── */
+function chartCukr(s, labels){
+  document.getElementById('chart-area').innerHTML=`<div class="chart-box">
+    <div class="chart-title">Cukr nalačno <span style="color:#64748b;font-size:11px">(mmol/l)</span>
+      <span style="color:#34d399;font-size:11px;margin-left:10px">norma 3.9–5.6</span></div>
+    ${mkCanvas('cc')}
+  </div>`;
+  const vals=s.map(r=>r.cukr);
+  charts.c=new Chart(ctx('cc'),{
+    type:'line',
+    data:{labels, datasets:[
+      {...zoneDataset(labels,5.6,'rgba(52,211,153,0)','+1'), backgroundColor:'rgba(52,211,153,0.12)'},
+      {...zoneDataset(labels,3.9,'rgba(52,211,153,0)',false)},
+      {...zoneDataset(labels,5.6,'#f87171',false), borderDash:[5,4]},
+      {...zoneDataset(labels,3.9,'#fb923c',false), borderDash:[5,4]},
+      {
+        data:vals, label:'Cukr', order:1,
+        borderColor:'#34d399', backgroundColor:'rgba(52,211,153,.15)',
+        fill:true, borderWidth:2.5,
+        pointBackgroundColor:'#34d399', pointRadius:5, pointHoverRadius:7,
+        spanGaps:true, tension:0.3
+      }
+    ]},
+    options:{...BASE,
+      plugins:{...BASE.plugins,tooltip:{...BASE.plugins.tooltip,
+        filter:item=>item.datasetIndex===4
+      }}
+    }
+  });
+}
+
+/* ── TEP / PAS ── */
+function chartSimple(s, labels, key, cfg){
+  let hint='';
+  if(cfg.refMax)hint+=` <span style="color:#f87171;font-size:11px">⚠ max ${cfg.refMax}</span>`;
+  if(cfg.refMin)hint+=` <span style="color:#fb923c;font-size:11px"> min ${cfg.refMin}</span>`;
+  document.getElementById('chart-area').innerHTML=`<div class="chart-box">
+    <div class="chart-title">${cfg.label} <span style="color:#64748b;font-size:11px">(${cfg.unit})</span>${hint}</div>
+    ${mkCanvas('co')}
+  </div>`;
+  const vals=s.map(r=>r[key]);
+  const datasets=[];
+  if(cfg.refMax&&cfg.refMin){
+    datasets.push({...zoneDataset(labels,cfg.refMax,'rgba(52,211,153,0)','+1'), backgroundColor:'rgba(52,211,153,0.1)'});
+    datasets.push({...zoneDataset(labels,cfg.refMin,'rgba(52,211,153,0)',false)});
+    datasets.push({...zoneDataset(labels,cfg.refMax,'#f87171',false), borderDash:[5,4]});
+    datasets.push({...zoneDataset(labels,cfg.refMin,'#fb923c',false), borderDash:[5,4]});
+  }
+  datasets.push({
+    data:vals, label:cfg.label, order:1,
+    borderColor:cfg.color, backgroundColor:cfg.color+'26',
+    fill:true, borderWidth:2.5,
+    pointBackgroundColor:cfg.color, pointRadius:5, pointHoverRadius:7,
+    spanGaps:true, tension:0.3
+  });
+  const dataIdx=datasets.length-1;
+  charts.o=new Chart(ctx('co'),{
+    type:'line',
+    data:{labels,datasets},
+    options:{...BASE,
+      plugins:{...BASE.plugins,tooltip:{...BASE.plugins.tooltip,
+        filter:item=>item.datasetIndex===dataIdx
+      }}
+    }
+  });
+}
+
+/* ── MAIN RENDER ── */
+function renderChart(){
+  killCharts();
+  const s=sorted();
+  const labels=s.map(r=>fmtDate(r.date));
+  if(activeCard==='vaha')   chartVaha(s,labels);
+  else if(activeCard==='tlak')   chartTlak(s,labels);
+  else if(activeCard==='ketony') chartKetony(s,labels);
+  else if(activeCard==='cukr')   chartCukr(s,labels);
+  else if(activeCard==='tep')    chartSimple(s,labels,'tep',  {label:'Tep',unit:'bpm',color:'#a78bfa',refMax:100,refMin:50});
+  else if(activeCard==='pas')    chartSimple(s,labels,'pas',  {label:'Pas',unit:'cm', color:'#f59e0b'});
+}
+function renderAll(){renderCards();renderChart();}
+
+/* ── TABLE ── */
+function renderTable(){
+  document.getElementById('tbl-body').innerHTML=[...sorted()].reverse().map(r=>{
+    const ks=ketoSt(r.ketony);
+    return `<tr>
+      <td>${r.date}</td>
+      <td style="color:${r.vaha<=VAHA_CIL?'#34d399':'#e2e8f0'}">${r.vaha??'–'}</td>
+      <td>${r.pas??'–'}</td>
+      <td style="color:${r.cukr>5.6?'#f87171':'#e2e8f0'}">${r.cukr??'–'}</td>
+      <td>${r.ketony!=null?`<span style="color:${ks?.color||'#e2e8f0'};font-weight:600">${r.ketony} ${ks?.icon||''}</span>`:'<span style="color:#475569">–</span>'}</td>
+      <td style="color:${(r.tlak_sys>130||r.tlak_dia>85)?'#f87171':'#e2e8f0'}">${r.tlak_sys!=null?r.tlak_sys+'/'+r.tlak_dia:'–'}</td>
+      <td>${r.tep??'–'}</td>
+      <td>
+        <button class="btn-sm" style="color:#94a3b8;margin-right:3px" onclick="editRow('${r.date}')">✏️</button>
+        <button class="btn-sm" style="color:#f87171" onclick="deleteRow('${r.date}')">🗑</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+function editRow(date){
+  const r=records.find(x=>x.date===date);if(!r)return;
+  fillForm(r);
+  document.querySelectorAll('.nav-btn').forEach((b,i)=>{b.classList.remove('active');if(i===1)b.classList.add('active');});
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-zadani').classList.add('active');
+}
+function deleteRow(date){
+  if(!confirm('Smazat '+date+'?'))return;
+  records=records.filter(r=>r.date!==date);sd(records);renderTable();renderAll();
+}
+
+/* ── FORM ── */
+function fillForm(r){
+  ['date','vaha','pas','cukr','tep','tlak_sys','tlak_dia','ketony'].forEach(k=>{
+    const el=document.getElementById('f-'+k);if(el)el.value=r[k]??'';
+  });
+  updateKetoBar();
+}
+document.getElementById('f-date').addEventListener('change',function(){
+  const r=records.find(x=>x.date===this.value);
+  if(r)fillForm(r);
+  else{['vaha','pas','cukr','tep','tlak_sys','tlak_dia','ketony'].forEach(k=>{document.getElementById('f-'+k).value='';});updateKetoBar();}
+});
+document.getElementById('f-ketony').addEventListener('input',updateKetoBar);
+function updateKetoBar(){
+  const v=parseFloat(document.getElementById('f-ketony').value);
+  const dot=document.getElementById('keto-dot'),lbl=document.getElementById('keto-lbl');
+  if(isNaN(v)){dot.style.display='none';lbl.textContent='';return;}
+  dot.style.display='block';dot.style.left=Math.min(Math.max(v/4*100,0),100)+'%';
+  const ks=ketoSt(v);
+  if(ks){lbl.textContent=ks.icon+' '+ks.label;lbl.style.color=ks.color;}
+  document.getElementById('f-ketony').style.borderColor=v>=0.5?'#c026d3':'#334155';
+}
+function saveRecord(){
+  const date=document.getElementById('f-date').value;
+  if(!date){alert('Vyber datum');return;}
+  const n=id=>{const v=document.getElementById(id).value;return v!==''?parseFloat(v):null;};
+  const i=id=>{const v=document.getElementById(id).value;return v!==''?parseInt(v):null;};
+  const entry={date,vaha:n('f-vaha'),pas:n('f-pas'),cukr:n('f-cukr'),ketony:n('f-ketony'),
+               tlak_sys:i('f-tlak_sys'),tlak_dia:i('f-tlak_dia'),tep:i('f-tep')};
+  records=records.filter(r=>r.date!==date).concat(entry);
+  sd(records);
+  const btn=document.getElementById('save-btn');
+  btn.textContent='✓ Uloženo!';btn.classList.add('ok');
+  setTimeout(()=>{btn.textContent='Uložit záznam';btn.classList.remove('ok');},2000);
+  renderAll();
+}
+
+document.getElementById('f-date').value=new Date().toISOString().slice(0,10);
+renderAll();
+</script>
+</body>
+</html>
