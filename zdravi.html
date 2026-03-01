@@ -172,6 +172,10 @@ function renderCards(){
     {key:'whtr',  label:'Pas/Výška',    color:'#f472b6'},
     {key:'pi',    label:'Ponderal Idx', color:'#a78bfa'},
     {key:'ci',    label:'Conicity Idx', color:'#fb7185'},
+    {key:'gki',   label:'GKI',          color:'#86efac'},
+    {key:'pp',    label:'Pulse Press.',  color:'#fbbf24'},
+    {key:'map',   label:'MAP',           color:'#67e8f9'},
+    {key:'rpp',   label:'RPP',           color:'#c4b5fd'},
   ];
   document.getElementById('cards').innerHTML=defs.map(d=>{
     let valH='',subH='';
@@ -211,6 +215,30 @@ function renderCards(){
       const cLabel=ci==null?'':ci<1.25?'Nízké riziko ✓':ci<1.35?'Střední riziko':'Vysoké riziko';
       valH=`<span style="color:${cColor}">${ci??'–'}</span>`;
       subH=`<div class="card-unit">cíl &lt;1.25</div>${ci?`<div class="card-sub" style="color:${cColor}">${cLabel}</div>`:''}`;
+    } else if(d.key==='gki'){
+      const gki=(lat.cukr!=null&&lat.ketony!=null&&lat.ketony>0)?parseFloat((lat.cukr/lat.ketony).toFixed(1)):null;
+      const gkiColor=gki==null?'#86efac':gki<1?'#c026d3':gki<3?'#34d399':gki<6?'#60a5fa':gki<9?'#f59e0b':'#f87171';
+      const gkiLabel=gki==null?'':gki<1?'Terapeutická':gki<3?'Vysoká ketóza':gki<6?'Nutriční ✓':gki<9?'Lehká ketóza':'Mimo ketózu';
+      valH=`<span style="color:${gkiColor}">${gki??'–'}</span>`;
+      subH=`<div class="card-unit">cíl 3–6</div>${gki?`<div class="card-sub" style="color:${gkiColor}">${gkiLabel}</div>`:''}`;
+    } else if(d.key==='pp'){
+      const pp=(lat.tlak_sys!=null&&lat.tlak_dia!=null)?(lat.tlak_sys-lat.tlak_dia):null;
+      const ppColor=pp==null?'#fbbf24':pp<40?'#fb923c':pp<=60?'#34d399':'#f87171';
+      const ppLabel=pp==null?'':pp<40?'Nízký':pp<=60?'Norma ✓':'Zvýšený';
+      valH=`<span style="color:${ppColor}">${pp??'–'}</span>`;
+      subH=`<div class="card-unit">mmHg (40–60)</div>${pp?`<div class="card-sub" style="color:${ppColor}">${ppLabel}</div>`:''}`;
+    } else if(d.key==='map'){
+      const map=(lat.tlak_sys!=null&&lat.tlak_dia!=null)?Math.round(lat.tlak_dia+(lat.tlak_sys-lat.tlak_dia)/3):null;
+      const mapColor=map==null?'#67e8f9':map<70?'#fb923c':map<=100?'#34d399':'#f87171';
+      const mapLabel=map==null?'':map<70?'Nízký':map<=100?'Norma ✓':'Zvýšený';
+      valH=`<span style="color:${mapColor}">${map??'–'}</span>`;
+      subH=`<div class="card-unit">mmHg (70–100)</div>${map?`<div class="card-sub" style="color:${mapColor}">${mapLabel}</div>`:''}`;
+    } else if(d.key==='rpp'){
+      const rpp=(lat.tlak_sys!=null&&lat.tep!=null)?(lat.tlak_sys*lat.tep):null;
+      const rppColor=rpp==null?'#c4b5fd':rpp<12000?'#34d399':rpp<20000?'#f59e0b':'#f87171';
+      const rppLabel=rpp==null?'':rpp<12000?'Výborné ✓':rpp<20000?'Normální':'Zvýšená zátěž';
+      valH=`<span style="color:${rppColor}">${rpp!=null?(rpp/1000).toFixed(1)+'k':'–'}</span>`;
+      subH=`<div class="card-unit">cíl &lt;12 000</div>${rpp?`<div class="card-sub" style="color:${rppColor}">${rppLabel}</div>`:''}`;
     } else {
       const v=lat[d.key],bad=(d.refMax&&v>d.refMax)||(d.refMin&&v<d.refMin);
       valH=`<span style="color:${d.color}">${v??'–'}</span>`;
@@ -489,6 +517,171 @@ function chartSimple(s, labels, key, cfg){
   });
 }
 
+/* ── GKI ── */
+function chartGki(s, labels){
+  const vals=s.map(r=>(r.cukr!=null&&r.ketony!=null&&r.ketony>0)?parseFloat((r.cukr/r.ketony).toFixed(1)):null);
+  const ptC=vals.map(v=>v==null?'#86efac':v<1?'#c026d3':v<3?'#34d399':v<6?'#60a5fa':v<9?'#f59e0b':'#f87171');
+  document.getElementById('chart-area').innerHTML=`<div class="chart-box">
+    <div class="chart-title">GKI — Glucose Ketone Index
+      ${infoBox('gki','<strong>Glucose Ketone Index</strong> — glukóza ÷ ketony. Měří metabolický stav přesněji než samotné ketony nebo glukóza zvlášť. <strong>Pod 1.0</strong>: terapeutická ketóza (onkologie, epilepsie). <strong>1–3</strong>: vysoká ketóza, maximální spalování tuků. <strong>3–6</strong>: nutriční ketóza ✓ — optimální pro tebe. <strong>6–9</strong>: lehká ketóza. <strong>Nad 9</strong>: mimo ketózu. Čím nižší, tím hlouběji jsi v ketóze.')}
+    </div>
+    <div class="legend" style="margin-bottom:10px">
+      <span style="color:#c026d3;font-size:10px">● &lt;1 Terapeutická</span>
+      <span style="color:#34d399;font-size:10px">● 1–3 Vysoká</span>
+      <span style="color:#60a5fa;font-size:10px">● 3–6 Nutriční ✓</span>
+      <span style="color:#f59e0b;font-size:10px">● 6–9 Lehká</span>
+      <span style="color:#f87171;font-size:10px">● &gt;9 Mimo</span>
+    </div>
+    ${mkCanvas('cgki')}
+  </div>`;
+  charts.gki=new Chart(ctx('cgki'),{
+    type:'line',
+    data:{labels, datasets:[
+      {...zoneDataset(labels,6,'rgba(96,165,250,0)','+1'), backgroundColor:'rgba(96,165,250,0.12)'},
+      {...zoneDataset(labels,3,'rgba(96,165,250,0)',false)},
+      {...zoneDataset(labels,6,'#f59e0b',false), borderDash:[5,4]},
+      {...zoneDataset(labels,3,'#34d399',false), borderDash:[5,4]},
+      {...zoneDataset(labels,1,'#c026d3',false), borderDash:[5,4]},
+      {
+        data:vals, label:'GKI', order:1,
+        borderColor:'#86efac', backgroundColor:'rgba(134,239,172,.15)',
+        fill:true, borderWidth:2.5,
+        pointBackgroundColor:ptC, pointRadius:5, pointHoverRadius:7,
+        spanGaps:true, tension:0.3
+      }
+    ]},
+    options:{...BASE,
+      scales:{...BASE.scales, y:{...BASE.scales.y, min:0, max:15}},
+      plugins:{...BASE.plugins, tooltip:{...BASE.plugins.tooltip,
+        filter:item=>item.datasetIndex===5,
+        callbacks:{label:item=>`GKI: ${item.raw} — ${item.raw<1?'Terapeutická':item.raw<3?'Vysoká ketóza':item.raw<6?'Nutriční ✓':item.raw<9?'Lehká ketóza':'Mimo ketózu'}`}
+      }}
+    }
+  });
+}
+
+/* ── PULSE PRESSURE ── */
+function chartPp(s, labels){
+  const vals=s.map(r=>(r.tlak_sys!=null&&r.tlak_dia!=null)?(r.tlak_sys-r.tlak_dia):null);
+  const ptC=vals.map(v=>v==null?'#fbbf24':v<40?'#fb923c':v<=60?'#34d399':'#f87171');
+  document.getElementById('chart-area').innerHTML=`<div class="chart-box">
+    <div class="chart-title">Pulse Pressure (PP)
+      ${infoBox('pp','<strong>Pulse Pressure</strong> — systola mínus diastola. Ukazuje pružnost cév. <strong>40–60 mmHg</strong>: norma ✓ — cévy jsou pružné. <strong>Pod 40</strong>: nízký PP, možná slabá funkce srdce. <strong>Nad 60</strong>: tuhé cévy, zvýšené riziko infarktu a mozkové příhody — typické u starších lidí nebo při ateroskleróze. Trénink a zdravá váha PP zlepšují.')}
+    </div>
+    <div class="legend" style="margin-bottom:10px">
+      <span style="color:#fb923c;font-size:10px">● &lt;40 Nízký</span>
+      <span style="color:#34d399;font-size:10px">● 40–60 Norma ✓</span>
+      <span style="color:#f87171;font-size:10px">● &gt;60 Zvýšený</span>
+    </div>
+    ${mkCanvas('cpp')}
+  </div>`;
+  charts.pp=new Chart(ctx('cpp'),{
+    type:'line',
+    data:{labels, datasets:[
+      {...zoneDataset(labels,60,'rgba(52,211,153,0)','+1'), backgroundColor:'rgba(52,211,153,0.12)'},
+      {...zoneDataset(labels,40,'rgba(52,211,153,0)',false)},
+      {...zoneDataset(labels,60,'#f87171',false), borderDash:[5,4]},
+      {...zoneDataset(labels,40,'#fb923c',false), borderDash:[5,4]},
+      {
+        data:vals, label:'PP', order:1,
+        borderColor:'#fbbf24', backgroundColor:'rgba(251,191,36,.15)',
+        fill:true, borderWidth:2.5,
+        pointBackgroundColor:ptC, pointRadius:5, pointHoverRadius:7,
+        spanGaps:true, tension:0.3
+      }
+    ]},
+    options:{...BASE,
+      scales:{...BASE.scales, y:{...BASE.scales.y, min:20, max:90}},
+      plugins:{...BASE.plugins, tooltip:{...BASE.plugins.tooltip,
+        filter:item=>item.datasetIndex===4,
+        callbacks:{label:item=>`PP: ${item.raw} mmHg`}
+      }}
+    }
+  });
+}
+
+/* ── MAP ── */
+function chartMap(s, labels){
+  const vals=s.map(r=>(r.tlak_sys!=null&&r.tlak_dia!=null)?Math.round(r.tlak_dia+(r.tlak_sys-r.tlak_dia)/3):null);
+  const ptC=vals.map(v=>v==null?'#67e8f9':v<70?'#fb923c':v<=100?'#34d399':'#f87171');
+  document.getElementById('chart-area').innerHTML=`<div class="chart-box">
+    <div class="chart-title">MAP — Střední arteriální tlak
+      ${infoBox('map','<strong>Mean Arterial Pressure</strong> — vzorec: diastola + (systola − diastola) ÷ 3. Průměrný tlak krve v cévách během celého srdečního cyklu — přesnější než samotná systola nebo diastola. <strong>70–100 mmHg</strong>: norma ✓. <strong>Pod 70</strong>: hypotenze, možná slabá perfuze orgánů. <strong>Nad 100</strong>: hypertenze, zvýšená zátěž srdce a cév. Pro mozek a ledviny je MAP klíčový ukazatel.')}
+    </div>
+    <div class="legend" style="margin-bottom:10px">
+      <span style="color:#fb923c;font-size:10px">● &lt;70 Nízký</span>
+      <span style="color:#34d399;font-size:10px">● 70–100 Norma ✓</span>
+      <span style="color:#f87171;font-size:10px">● &gt;100 Zvýšený</span>
+    </div>
+    ${mkCanvas('cmap')}
+  </div>`;
+  charts.map=new Chart(ctx('cmap'),{
+    type:'line',
+    data:{labels, datasets:[
+      {...zoneDataset(labels,100,'rgba(52,211,153,0)','+1'), backgroundColor:'rgba(52,211,153,0.12)'},
+      {...zoneDataset(labels,70,'rgba(52,211,153,0)',false)},
+      {...zoneDataset(labels,100,'#f87171',false), borderDash:[5,4]},
+      {...zoneDataset(labels,70,'#fb923c',false), borderDash:[5,4]},
+      {
+        data:vals, label:'MAP', order:1,
+        borderColor:'#67e8f9', backgroundColor:'rgba(103,232,249,.15)',
+        fill:true, borderWidth:2.5,
+        pointBackgroundColor:ptC, pointRadius:5, pointHoverRadius:7,
+        spanGaps:true, tension:0.3
+      }
+    ]},
+    options:{...BASE,
+      scales:{...BASE.scales, y:{...BASE.scales.y, min:55, max:130}},
+      plugins:{...BASE.plugins, tooltip:{...BASE.plugins.tooltip,
+        filter:item=>item.datasetIndex===4,
+        callbacks:{label:item=>`MAP: ${item.raw} mmHg`}
+      }}
+    }
+  });
+}
+
+/* ── RPP ── */
+function chartRpp(s, labels){
+  const vals=s.map(r=>(r.tlak_sys!=null&&r.tep!=null)?(r.tlak_sys*r.tep):null);
+  const ptC=vals.map(v=>v==null?'#c4b5fd':v<12000?'#34d399':v<20000?'#f59e0b':'#f87171');
+  const valsK=vals.map(v=>v!=null?parseFloat((v/1000).toFixed(1)):null);
+  document.getElementById('chart-area').innerHTML=`<div class="chart-box">
+    <div class="chart-title">RPP — Zátěž srdce v klidu
+      ${infoBox('rpp','<strong>Rate Pressure Product</strong> — systola × klidový tep. Ukazuje, jak tvrdě srdce pracuje v klidu — čím nižší, tím efektivnější. <strong>Pod 12 000</strong>: výborné ✓ — typické pro trénované sportovce. <strong>12 000–20 000</strong>: normální pro běžnou populaci. <strong>Nad 20 000</strong>: zvýšená zátěž myokardu. Trénovaní sportovci mají nízké RPP díky nízkému klidovému tepu — to je jeden z důvodů proč je aerobní kondice tak prospěšná pro srdce.')}
+    </div>
+    <div class="legend" style="margin-bottom:10px">
+      <span style="color:#34d399;font-size:10px">● &lt;12 000 Výborné ✓</span>
+      <span style="color:#f59e0b;font-size:10px">● 12–20k Normální</span>
+      <span style="color:#f87171;font-size:10px">● &gt;20 000 Zvýšená zátěž</span>
+    </div>
+    ${mkCanvas('crpp')}
+  </div>`;
+  charts.rpp=new Chart(ctx('crpp'),{
+    type:'line',
+    data:{labels, datasets:[
+      {...zoneDataset(labels,12,'rgba(52,211,153,0)','+1'), backgroundColor:'rgba(52,211,153,0.12)'},
+      {...zoneDataset(labels,5,'rgba(52,211,153,0)',false)},
+      {...zoneDataset(labels,12,'#f59e0b',false), borderDash:[5,4]},
+      {...zoneDataset(labels,20,'#f87171',false), borderDash:[5,4]},
+      {
+        data:valsK, label:'RPP', order:1,
+        borderColor:'#c4b5fd', backgroundColor:'rgba(196,181,253,.15)',
+        fill:true, borderWidth:2.5,
+        pointBackgroundColor:ptC, pointRadius:5, pointHoverRadius:7,
+        spanGaps:true, tension:0.3
+      }
+    ]},
+    options:{...BASE,
+      scales:{...BASE.scales, y:{...BASE.scales.y, min:4, max:25,
+        ticks:{...BASE.scales.y.ticks, callback:v=>v+'k'}}},
+      plugins:{...BASE.plugins, tooltip:{...BASE.plugins.tooltip,
+        filter:item=>item.datasetIndex===4,
+        callbacks:{label:item=>`RPP: ${(item.raw*1000).toLocaleString()} (${item.raw<12?'✓ Výborné':item.raw<20?'Normální':'Zvýšená zátěž'})`}
+      }}
+    }
+  });
+}
+
 /* ── CONICITY INDEX ── */
 function chartCi(s, labels){
   const vals=s.map(r=>(r.vaha!=null&&r.pas!=null)?parseFloat((r.pas/100/(0.109*Math.sqrt(r.vaha/VYSKA_M))).toFixed(2)):null);
@@ -663,6 +856,10 @@ function renderChart(){
   else if(activeCard==='whtr')   chartWhtr(s,labels);
   else if(activeCard==='pi')     chartPi(s,labels);
   else if(activeCard==='ci')     chartCi(s,labels);
+  else if(activeCard==='gki')    chartGki(s,labels);
+  else if(activeCard==='pp')     chartPp(s,labels);
+  else if(activeCard==='map')    chartMap(s,labels);
+  else if(activeCard==='rpp')    chartRpp(s,labels);
 }
 function renderAll(){renderCards();renderChart();}
 
