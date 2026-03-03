@@ -1,0 +1,1869 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Prevodnk fyzikalnch jednotek 63 kategorii 560+ jednotek"/>
+  <title>UnitConv Prevodnik jednotek</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Unbounded:wght@400;700;900&display=swap" rel="stylesheet"/>
+  <meta name="theme-color" content="#e8521a"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+  <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+  <style id="uc-vars">
+    :root{--bg:#07070e;--surface:#0b0b17;--surface2:#0f0f1c;--surface3:#111120;--active:#121220;--swap-bg:#161626;--border:#1a1a2e;--border2:#222238;--border3:#282840;--ghost:#2a2a42;--group:#2a2a45;--dim:#383858;--faint:#484860;--muted:#686880;--text:#e0dcd5;--opt-bg:#0d0d1a;--accent:#e8521a;}
+  </style>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Mono', 'Courier New', monospace; }
+    #root { min-height: 100vh; }
+  </style>
+</head>
+<body style="background:#07070e">
+  <div id="root"></div>
+  <script>
+  (function(){
+    var s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js';
+    s.onload = function() {
+      var w = console.warn;
+      console.warn = function() {
+        if (arguments[0] && String(arguments[0]).indexOf('Babel transformer') !== -1) return;
+        w.apply(console, arguments);
+      };
+      var src = document.getElementById('app-src').textContent;
+      var out = Babel.transform(src, { presets: ['react'] }).code;
+      setTimeout(function(){ console.warn = w; }, 200);
+      new Function('React', 'ReactDOM', out)(React, ReactDOM);
+    };
+    document.head.appendChild(s);
+  })();
+  </script>
+  <script id="app-src" type="text/plain">
+const { useState, useMemo, useEffect, useRef, useCallback } = React;
+const CATEGORIES = [
+  {
+    id: "length", label: "Délka", icon: "📏", group: "Základní",
+    units: [
+      { id: "fm",    label: "Femtometr",          symbol: "fm"    },
+      { id: "pm",    label: "Pikometr",            symbol: "pm"    },
+      { id: "ang",   label: "Angstrom",            symbol: "Å"     },
+      { id: "nm",    label: "Nanometr",            symbol: "nm"    },
+      { id: "um",    label: "Mikrometr",           symbol: "μm"    },
+      { id: "mm",    label: "Milimetr",            symbol: "mm"    },
+      { id: "cm",    label: "Centimetr",           symbol: "cm"    },
+      { id: "dm",    label: "Decimetr",            symbol: "dm"    },
+      { id: "m",     label: "Metr",                symbol: "m"     },
+      { id: "km",    label: "Kilometr",            symbol: "km"    },
+      { id: "thou",  label: "Thou / Mil",          symbol: "thou"  },
+      { id: "pttyp", label: "Typogr. bod",         symbol: "pt"    },
+      { id: "pica",  label: "Pica",                symbol: "pica"  },
+      { id: "in",    label: "Palec",               symbol: "in"    },
+      { id: "hand",  label: "Hand",                symbol: "hh"    },
+      { id: "span",  label: "Span",                symbol: "span"  },
+      { id: "cubit", label: "Loket (cubit)",       symbol: "cubit" },
+      { id: "ft",    label: "Stopa",               symbol: "ft"    },
+      { id: "yd",    label: "Yard",                symbol: "yd"    },
+      { id: "rod",   label: "Rod / Perch",         symbol: "rd"    },
+      { id: "chain", label: "Chain",               symbol: "ch"    },
+      { id: "fur",   label: "Furlong",             symbol: "fur"   },
+      { id: "mi",    label: "Míle",                symbol: "mi"    },
+      { id: "league",label: "League",              symbol: "lea"   },
+      { id: "nmi",   label: "Námořní míle",        symbol: "nmi"   },
+      { id: "ftm",   label: "Fathom",              symbol: "ftm"   },
+      { id: "au",    label: "Astron. jednotka",    symbol: "AU"    },
+      { id: "ly",    label: "Světelný rok",        symbol: "ly"    },
+      { id: "pc",    label: "Parsec",              symbol: "pc"    },
+      { id: "kpc",   label: "Kiloparsec",          symbol: "kpc"   },
+      { id: "mpc",   label: "Megaparsec",          symbol: "Mpc"   },
+    ],
+    toBase: {
+      fm:v=>v*1e-15, pm:v=>v*1e-12, ang:v=>v*1e-10, nm:v=>v*1e-9, um:v=>v*1e-6,
+      mm:v=>v*0.001, cm:v=>v*0.01, dm:v=>v*0.1, m:v=>v, km:v=>v*1000,
+      thou:v=>v*2.54e-5, pttyp:v=>v*0.000352778, pica:v=>v*0.004233,
+      in:v=>v*0.0254, hand:v=>v*0.1016, span:v=>v*0.2286, cubit:v=>v*0.4572,
+      ft:v=>v*0.3048, yd:v=>v*0.9144, rod:v=>v*5.0292, chain:v=>v*20.1168,
+      fur:v=>v*201.168, mi:v=>v*1609.344, league:v=>v*4828.032, nmi:v=>v*1852,
+      ftm:v=>v*1.8288, au:v=>v*1.496e11, ly:v=>v*9.461e15,
+      pc:v=>v*3.0857e16, kpc:v=>v*3.0857e19, mpc:v=>v*3.0857e22,
+    },
+    fromBase: {
+      fm:v=>v/1e-15, pm:v=>v/1e-12, ang:v=>v/1e-10, nm:v=>v/1e-9, um:v=>v/1e-6,
+      mm:v=>v/0.001, cm:v=>v/0.01, dm:v=>v/0.1, m:v=>v, km:v=>v/1000,
+      thou:v=>v/2.54e-5, pttyp:v=>v/0.000352778, pica:v=>v/0.004233,
+      in:v=>v/0.0254, hand:v=>v/0.1016, span:v=>v/0.2286, cubit:v=>v/0.4572,
+      ft:v=>v/0.3048, yd:v=>v/0.9144, rod:v=>v/5.0292, chain:v=>v/20.1168,
+      fur:v=>v/201.168, mi:v=>v/1609.344, league:v=>v/4828.032, nmi:v=>v/1852,
+      ftm:v=>v/1.8288, au:v=>v/1.496e11, ly:v=>v/9.461e15,
+      pc:v=>v/3.0857e16, kpc:v=>v/3.0857e19, mpc:v=>v/3.0857e22,
+    },
+  },
+  {
+    id: "mass", label: "Hmotnost", icon: "⚖️", group: "Základní",
+    units: [
+      { id: "pg",   label: "Pikogram",          symbol: "pg"   },
+      { id: "ng",   label: "Nanogram",           symbol: "ng"   },
+      { id: "ug",   label: "Mikrogram",          symbol: "μg"   },
+      { id: "mg",   label: "Miligram",           symbol: "mg"   },
+      { id: "g",    label: "Gram",               symbol: "g"    },
+      { id: "dg",   label: "Decigram",           symbol: "dg"   },
+      { id: "dag",  label: "Dekagram",           symbol: "dag"  },
+      { id: "hg",   label: "Hektogram",          symbol: "hg"   },
+      { id: "kg",   label: "Kilogram",           symbol: "kg"   },
+      { id: "Mg",   label: "Megagram",           symbol: "Mg"   },
+      { id: "t",    label: "Tuna (metr.)",       symbol: "t"    },
+      { id: "q",    label: "Metrický cent",      symbol: "q"    },
+      { id: "ct",   label: "Karát",              symbol: "ct"   },
+      { id: "gr",   label: "Grain",              symbol: "gr"   },
+      { id: "dr",   label: "Dram",               symbol: "dr"   },
+      { id: "scr",  label: "Scruple",            symbol: "℈"   },
+      { id: "oz",   label: "Unce",               symbol: "oz"   },
+      { id: "lb",   label: "Libra",              symbol: "lb"   },
+      { id: "st",   label: "Stone",              symbol: "st"   },
+      { id: "slug", label: "Slug",               symbol: "slug" },
+      { id: "stn",  label: "Short ton (US)",     symbol: "tn"   },
+      { id: "ltn",  label: "Long ton (UK)",      symbol: "LT"   },
+      { id: "ozt",  label: "Troy unce",          symbol: "oz t" },
+      { id: "lbt",  label: "Troy libra",         symbol: "lb t" },
+      { id: "pwt",  label: "Pennyweight",        symbol: "dwt"  },
+      { id: "msun", label: "Solární hmota",      symbol: "M☉"  },
+    ],
+    toBase: {
+      pg:v=>v*1e-15, ng:v=>v*1e-12, ug:v=>v*1e-9, mg:v=>v*1e-6,
+      g:v=>v*0.001, dg:v=>v*0.0001, dag:v=>v*0.01, hg:v=>v*0.1,
+      kg:v=>v, Mg:v=>v*1000, t:v=>v*1000, q:v=>v*100, ct:v=>v*0.0002,
+      gr:v=>v*6.4799e-5, dr:v=>v*0.0017718, scr:v=>v*0.001296,
+      oz:v=>v*0.0283495, lb:v=>v*0.453592, st:v=>v*6.35029,
+      slug:v=>v*14.5939, stn:v=>v*907.185, ltn:v=>v*1016.05,
+      ozt:v=>v*0.0311035, lbt:v=>v*0.373242, pwt:v=>v*0.00155517,
+      msun:v=>v*1.989e30,
+    },
+    fromBase: {
+      pg:v=>v/1e-15, ng:v=>v/1e-12, ug:v=>v/1e-9, mg:v=>v/1e-6,
+      g:v=>v/0.001, dg:v=>v/0.0001, dag:v=>v/0.01, hg:v=>v/0.1,
+      kg:v=>v, Mg:v=>v/1000, t:v=>v/1000, q:v=>v/100, ct:v=>v/0.0002,
+      gr:v=>v/6.4799e-5, dr:v=>v/0.0017718, scr:v=>v/0.001296,
+      oz:v=>v/0.0283495, lb:v=>v/0.453592, st:v=>v/6.35029,
+      slug:v=>v/14.5939, stn:v=>v/907.185, ltn:v=>v/1016.05,
+      ozt:v=>v/0.0311035, lbt:v=>v/0.373242, pwt:v=>v/0.00155517,
+      msun:v=>v/1.989e30,
+    },
+  },
+  {
+    id: "temperature", label: "Teplota", icon: "🌡️", group: "Základní",
+    units: [
+      { id: "C",  label: "Celsius",    symbol: "°C"  },
+      { id: "F",  label: "Fahrenheit", symbol: "°F"  },
+      { id: "K",  label: "Kelvin",     symbol: "K"   },
+      { id: "R",  label: "Rankine",    symbol: "°R"  },
+      { id: "De", label: "Delisle",    symbol: "°De" },
+      { id: "N",  label: "Newton",     symbol: "°N"  },
+      { id: "Re", label: "Réaumur",    symbol: "°Ré" },
+      { id: "Ro", label: "Rømer",      symbol: "°Rø" },
+    ],
+    toBase: {
+      C:v=>v, F:v=>(v-32)*5/9, K:v=>v-273.15, R:v=>(v-491.67)*5/9,
+      De:v=>100-v*2/3, N:v=>v*100/33, Re:v=>v*5/4, Ro:v=>(v-7.5)*40/21,
+    },
+    fromBase: {
+      C:v=>v, F:v=>v*9/5+32, K:v=>v+273.15, R:v=>(v+273.15)*9/5,
+      De:v=>(100-v)*3/2, N:v=>v*33/100, Re:v=>v*4/5, Ro:v=>v*21/40+7.5,
+    },
+  },
+  {
+    id: "volume", label: "Objem", icon: "🧪", group: "Základní",
+    units: [
+      { id: "ul",    label: "Mikrolitr",        symbol: "μl"      },
+      { id: "ml",    label: "Mililitr",         symbol: "ml"      },
+      { id: "cl",    label: "Centilitr",        symbol: "cl"      },
+      { id: "dl",    label: "Decilitr",         symbol: "dl"      },
+      { id: "l",     label: "Litr",             symbol: "l"       },
+      { id: "mm3",   label: "mm³",              symbol: "mm³"     },
+      { id: "cm3",   label: "cm³",              symbol: "cm³"     },
+      { id: "dm3",   label: "dm³",              symbol: "dm³"     },
+      { id: "m3",    label: "m³",               symbol: "m³"      },
+      { id: "in3",   label: "Palec krychlový",  symbol: "in³"     },
+      { id: "ft3",   label: "Stopa krychlová",  symbol: "ft³"     },
+      { id: "yd3",   label: "Yard krychlový",   symbol: "yd³"     },
+      { id: "tsp",   label: "Čaj. lžička US",   symbol: "tsp"     },
+      { id: "tbsp",  label: "Polév. lžíce US",  symbol: "tbsp"    },
+      { id: "floz",  label: "Fl. unce (US)",    symbol: "fl oz"   },
+      { id: "flouk", label: "Fl. unce (UK)",    symbol: "fl oz UK"},
+      { id: "cup",   label: "Šálek (US)",       symbol: "cup"     },
+      { id: "pt",    label: "Pinta (US)",        symbol: "pt"      },
+      { id: "ptuk",  label: "Pinta (UK)",        symbol: "pt UK"   },
+      { id: "qt",    label: "Quart (US)",        symbol: "qt"      },
+      { id: "gal",   label: "Galon (US)",        symbol: "gal"     },
+      { id: "galuk", label: "Galon (UK)",        symbol: "gal UK"  },
+      { id: "bbl",   label: "Barel (ropa)",      symbol: "bbl"     },
+      { id: "bblu",  label: "Barel (US)",        symbol: "bbl US"  },
+      { id: "bu",    label: "Bushel (US)",       symbol: "bu"      },
+      { id: "pk",    label: "Peck (US)",         symbol: "pk"      },
+      { id: "fdr",   label: "Fluid dram",        symbol: "fl dr"   },
+      { id: "hhd",   label: "Hogshead",          symbol: "hhd"     },
+    ],
+    toBase: {
+      ul:v=>v*1e-6, ml:v=>v*0.001, cl:v=>v*0.01, dl:v=>v*0.1, l:v=>v,
+      mm3:v=>v*1e-6, cm3:v=>v*0.001, dm3:v=>v*1, m3:v=>v*1000,
+      in3:v=>v*0.016387, ft3:v=>v*28.3168, yd3:v=>v*764.555,
+      tsp:v=>v*0.00492892, tbsp:v=>v*0.0147868,
+      floz:v=>v*0.0295735, flouk:v=>v*0.0284131,
+      cup:v=>v*0.236588, pt:v=>v*0.473176, ptuk:v=>v*0.568261,
+      qt:v=>v*0.946353, gal:v=>v*3.78541, galuk:v=>v*4.54609,
+      bbl:v=>v*158.987, bblu:v=>v*119.24,
+      bu:v=>v*35.2391, pk:v=>v*8.80977, fdr:v=>v*0.00369669, hhd:v=>v*238.481,
+    },
+    fromBase: {
+      ul:v=>v/1e-6, ml:v=>v/0.001, cl:v=>v/0.01, dl:v=>v/0.1, l:v=>v,
+      mm3:v=>v/1e-6, cm3:v=>v/0.001, dm3:v=>v/1, m3:v=>v/1000,
+      in3:v=>v/0.016387, ft3:v=>v/28.3168, yd3:v=>v/764.555,
+      tsp:v=>v/0.00492892, tbsp:v=>v/0.0147868,
+      floz:v=>v/0.0295735, flouk:v=>v/0.0284131,
+      cup:v=>v/0.236588, pt:v=>v/0.473176, ptuk:v=>v/0.568261,
+      qt:v=>v/0.946353, gal:v=>v/3.78541, galuk:v=>v/4.54609,
+      bbl:v=>v/158.987, bblu:v=>v/119.24,
+      bu:v=>v/35.2391, pk:v=>v/8.80977, fdr:v=>v/0.00369669, hhd:v=>v/238.481,
+    },
+  },
+  {
+    id: "area", label: "Plocha", icon: "🗺️", group: "Základní",
+    units: [
+      { id: "nm2",  label: "nm²",              symbol: "nm²"   },
+      { id: "um2",  label: "μm²",              symbol: "μm²"   },
+      { id: "mm2",  label: "mm²",              symbol: "mm²"   },
+      { id: "cm2",  label: "cm²",              symbol: "cm²"   },
+      { id: "dm2",  label: "dm²",              symbol: "dm²"   },
+      { id: "m2",   label: "m²",               symbol: "m²"    },
+      { id: "are",  label: "Ar",               symbol: "a"     },
+      { id: "ha",   label: "Hektar",           symbol: "ha"    },
+      { id: "km2",  label: "km²",              symbol: "km²"   },
+      { id: "in2",  label: "Palec čtver.",     symbol: "in²"   },
+      { id: "ft2",  label: "Stopa čtver.",     symbol: "ft²"   },
+      { id: "yd2",  label: "Yard čtver.",      symbol: "yd²"   },
+      { id: "ac",   label: "Akr",              symbol: "ac"    },
+      { id: "mi2",  label: "Míle čtver.",      symbol: "mi²"   },
+      { id: "sec",  label: "Section (US)",     symbol: "sec"   },
+      { id: "twp",  label: "Township",         symbol: "twp"   },
+      { id: "dun",  label: "Dunam",            symbol: "dunam" },
+      { id: "mor",  label: "Morgen",           symbol: "Mg"    },
+      { id: "str",  label: "Stremma",          symbol: "str"   },
+      { id: "barn", label: "Barn (fyzika)",    symbol: "b"     },
+    ],
+    toBase: {
+      nm2:v=>v*1e-18, um2:v=>v*1e-12, mm2:v=>v*1e-6, cm2:v=>v*0.0001,
+      dm2:v=>v*0.01, m2:v=>v, are:v=>v*100, ha:v=>v*10000, km2:v=>v*1e6,
+      in2:v=>v*0.00064516, ft2:v=>v*0.092903, yd2:v=>v*0.836127,
+      ac:v=>v*4046.86, mi2:v=>v*2.58999e6,
+      sec:v=>v*2.58999e6, twp:v=>v*93.24e6,
+      dun:v=>v*1000, mor:v=>v*2500, str:v=>v*1000, barn:v=>v*1e-28,
+    },
+    fromBase: {
+      nm2:v=>v/1e-18, um2:v=>v/1e-12, mm2:v=>v/1e-6, cm2:v=>v/0.0001,
+      dm2:v=>v/0.01, m2:v=>v, are:v=>v/100, ha:v=>v/10000, km2:v=>v/1e6,
+      in2:v=>v/0.00064516, ft2:v=>v/0.092903, yd2:v=>v/0.836127,
+      ac:v=>v/4046.86, mi2:v=>v/2.58999e6,
+      sec:v=>v/2.58999e6, twp:v=>v/93.24e6,
+      dun:v=>v/1000, mor:v=>v/2500, str:v=>v/1000, barn:v=>v/1e-28,
+    },
+  },
+  {
+    id: "speed", label: "Rychlost", icon: "🚀", group: "Základní",
+    units: [
+      { id: "mms",  label: "mm/s",           symbol: "mm/s"  },
+      { id: "cms",  label: "cm/s",           symbol: "cm/s"  },
+      { id: "ms",   label: "m/s",            symbol: "m/s"   },
+      { id: "kms",  label: "km/s",           symbol: "km/s"  },
+      { id: "kmh",  label: "km/h",           symbol: "km/h"  },
+      { id: "fts",  label: "ft/s",           symbol: "ft/s"  },
+      { id: "mph",  label: "mph",            symbol: "mph"   },
+      { id: "mis",  label: "mi/s",           symbol: "mi/s"  },
+      { id: "knot",  label: "Uzel",           symbol: "kn"    },
+      { id: "mach", label: "Mach",           symbol: "Ma"    },
+      { id: "c",    label: "Rychlost světla",symbol: "c"     },
+    ],
+    toBase: {
+      mms:v=>v*0.001, cms:v=>v*0.01, ms:v=>v, kms:v=>v*1000,
+      kmh:v=>v/3.6, fts:v=>v*0.3048, mph:v=>v*0.44704,
+      mis:v=>v*1609.344, knot:v=>v*0.514444, mach:v=>v*340.29, c:v=>v*299792458,
+    },
+    fromBase: {
+      mms:v=>v/0.001, cms:v=>v/0.01, ms:v=>v, kms:v=>v/1000,
+      kmh:v=>v*3.6, fts:v=>v/0.3048, mph:v=>v/0.44704,
+      mis:v=>v/1609.344, knot:v=>v/0.514444, mach:v=>v/340.29, c:v=>v/299792458,
+    },
+  },
+  {
+    id: "time", label: "Čas", icon: "⏱️", group: "Základní",
+    units: [
+      { id: "fs",    label: "Femtosekunda", symbol: "fs"    },
+      { id: "ps",    label: "Pikosekunda",  symbol: "ps"    },
+      { id: "ns",    label: "Nanosekunda",  symbol: "ns"    },
+      { id: "us",    label: "Mikrosekunda", symbol: "μs"    },
+      { id: "ms2",   label: "Milisekunda",  symbol: "ms"    },
+      { id: "s",     label: "Sekunda",      symbol: "s"     },
+      { id: "min",   label: "Minuta",       symbol: "min"   },
+      { id: "h",     label: "Hodina",       symbol: "h"     },
+      { id: "d",     label: "Den",          symbol: "d"     },
+      { id: "wk",    label: "Týden",        symbol: "wk"    },
+      { id: "fn",    label: "Fortnight",    symbol: "fn"    },
+      { id: "mo",    label: "Měsíc",        symbol: "mo"    },
+      { id: "yr",    label: "Rok",          symbol: "yr"    },
+      { id: "dec",   label: "Dekáda",       symbol: "dec"   },
+      { id: "cent",  label: "Století",      symbol: "cent"  },
+      { id: "mill",  label: "Tisíciletí",   symbol: "mill"  },
+      { id: "score", label: "Score (20 let)",symbol:"score" },
+    ],
+    toBase: {
+      fs:v=>v*1e-15, ps:v=>v*1e-12, ns:v=>v*1e-9, us:v=>v*1e-6,
+      ms2:v=>v*0.001, s:v=>v, min:v=>v*60, h:v=>v*3600, d:v=>v*86400,
+      wk:v=>v*604800, fn:v=>v*1209600, mo:v=>v*2629746,
+      yr:v=>v*31556952, dec:v=>v*315569520, cent:v=>v*3155695200,
+      mill:v=>v*31556952000, score:v=>v*630720000,
+    },
+    fromBase: {
+      fs:v=>v/1e-15, ps:v=>v/1e-12, ns:v=>v/1e-9, us:v=>v/1e-6,
+      ms2:v=>v/0.001, s:v=>v, min:v=>v/60, h:v=>v/3600, d:v=>v/86400,
+      wk:v=>v/604800, fn:v=>v/1209600, mo:v=>v/2629746,
+      yr:v=>v/31556952, dec:v=>v/315569520, cent:v=>v/3155695200,
+      mill:v=>v/31556952000, score:v=>v/630720000,
+    },
+  },
+  {
+    id: "energy", label: "Energie", icon: "⚡", group: "Fyzika",
+    units: [
+      { id: "j",    label: "Joule",            symbol: "J"     },
+      { id: "kj",   label: "Kilojoule",        symbol: "kJ"    },
+      { id: "mj",   label: "Megajoule",        symbol: "MJ"    },
+      { id: "gj",   label: "Gigajoule",        symbol: "GJ"    },
+      { id: "tj",   label: "Terajoule",        symbol: "TJ"    },
+      { id: "erg",  label: "Erg",              symbol: "erg"   },
+      { id: "cal",  label: "Kalorie",          symbol: "cal"   },
+      { id: "kcal", label: "Kilokalorie",      symbol: "kcal"  },
+      { id: "wh",   label: "Watthodina",       symbol: "Wh"    },
+      { id: "kwh",  label: "Kilowatthodina",   symbol: "kWh"   },
+      { id: "mwh",  label: "Megawatthodina",   symbol: "MWh"   },
+      { id: "ftlb", label: "Foot-pound",       symbol: "ft·lb" },
+      { id: "btu",  label: "BTU",              symbol: "BTU"   },
+      { id: "thm",  label: "Therm",            symbol: "thm"   },
+      { id: "toe",  label: "Tuna ropy (TOE)",  symbol: "toe"   },
+      { id: "tce",  label: "Tuna uhlí (TCE)",  symbol: "tce"   },
+      { id: "ev",   label: "Elektronvolt",     symbol: "eV"    },
+      { id: "mev",  label: "Megaelektronvolt", symbol: "MeV"   },
+      { id: "gev",  label: "Gigaelektronvolt", symbol: "GeV"   },
+      { id: "tev",  label: "Teraelektronvolt", symbol: "TeV"   },
+    ],
+    toBase: {
+      j:v=>v, kj:v=>v*1e3, mj:v=>v*1e6, gj:v=>v*1e9, tj:v=>v*1e12,
+      erg:v=>v*1e-7, cal:v=>v*4.184, kcal:v=>v*4184,
+      wh:v=>v*3600, kwh:v=>v*3.6e6, mwh:v=>v*3.6e9,
+      ftlb:v=>v*1.35582, btu:v=>v*1055.06, thm:v=>v*1.05506e8,
+      toe:v=>v*4.1868e10, tce:v=>v*2.93076e10,
+      ev:v=>v*1.602e-19, mev:v=>v*1.602e-13, gev:v=>v*1.602e-10, tev:v=>v*1.602e-7,
+    },
+    fromBase: {
+      j:v=>v, kj:v=>v/1e3, mj:v=>v/1e6, gj:v=>v/1e9, tj:v=>v/1e12,
+      erg:v=>v/1e-7, cal:v=>v/4.184, kcal:v=>v/4184,
+      wh:v=>v/3600, kwh:v=>v/3.6e6, mwh:v=>v/3.6e9,
+      ftlb:v=>v/1.35582, btu:v=>v/1055.06, thm:v=>v/1.05506e8,
+      toe:v=>v/4.1868e10, tce:v=>v/2.93076e10,
+      ev:v=>v/1.602e-19, mev:v=>v/1.602e-13, gev:v=>v/1.602e-10, tev:v=>v/1.602e-7,
+    },
+  },
+  {
+    id: "pressure", label: "Tlak", icon: "🔩", group: "Fyzika",
+    units: [
+      { id: "pa",    label: "Pascal",          symbol: "Pa"     },
+      { id: "hpa",   label: "Hektopascal",     symbol: "hPa"    },
+      { id: "kpa",   label: "Kilopascal",      symbol: "kPa"    },
+      { id: "mpa",   label: "Megapascal",      symbol: "MPa"    },
+      { id: "gpa",   label: "Gigapascal",      symbol: "GPa"    },
+      { id: "bar",   label: "Bar",             symbol: "bar"    },
+      { id: "mbar",  label: "Milibar",         symbol: "mbar"   },
+      { id: "atm",   label: "Atmosféra (atm)", symbol: "atm"    },
+      { id: "at",    label: "Tech. atmosféra", symbol: "at"     },
+      { id: "torr",  label: "Torr",            symbol: "Torr"   },
+      { id: "mmhg",  label: "mmHg",            symbol: "mmHg"   },
+      { id: "inhg",  label: "inHg",            symbol: "inHg"   },
+      { id: "cmh2o", label: "cmH₂O",           symbol: "cmH₂O"  },
+      { id: "inh2o", label: "inH₂O",           symbol: "inH₂O"  },
+      { id: "psi",   label: "PSI",             symbol: "psi"    },
+      { id: "psf",   label: "PSF",             symbol: "psf"    },
+    ],
+    toBase: {
+      pa:v=>v, hpa:v=>v*100, kpa:v=>v*1000, mpa:v=>v*1e6, gpa:v=>v*1e9,
+      bar:v=>v*1e5, mbar:v=>v*100, atm:v=>v*101325, at:v=>v*98066.5,
+      torr:v=>v*133.322, mmhg:v=>v*133.322, inhg:v=>v*3386.39,
+      cmh2o:v=>v*98.0638, inh2o:v=>v*249.089, psi:v=>v*6894.76, psf:v=>v*47.8803,
+    },
+    fromBase: {
+      pa:v=>v, hpa:v=>v/100, kpa:v=>v/1000, mpa:v=>v/1e6, gpa:v=>v/1e9,
+      bar:v=>v/1e5, mbar:v=>v/100, atm:v=>v/101325, at:v=>v/98066.5,
+      torr:v=>v/133.322, mmhg:v=>v/133.322, inhg:v=>v/3386.39,
+      cmh2o:v=>v/98.0638, inh2o:v=>v/249.089, psi:v=>v/6894.76, psf:v=>v/47.8803,
+    },
+  },
+  {
+    id: "power", label: "Výkon", icon: "💡", group: "Fyzika",
+    units: [
+      { id: "uw",    label: "Mikrowatt",           symbol: "μW"     },
+      { id: "mw",    label: "Miliwatt",            symbol: "mW"     },
+      { id: "w",     label: "Watt",                symbol: "W"      },
+      { id: "kw",    label: "Kilowatt",            symbol: "kW"     },
+      { id: "megw",  label: "Megawatt",            symbol: "MW"     },
+      { id: "gw",    label: "Gigawatt",            symbol: "GW"     },
+      { id: "tw",    label: "Terawatt",            symbol: "TW"     },
+      { id: "hp",    label: "Koňská síla (mech.)", symbol: "hp"     },
+      { id: "kss",    label: "Koňská síla (PS)",    symbol: "PS"     },
+      { id: "btu_h", label: "BTU/h",               symbol: "BTU/h"  },
+      { id: "cal_s", label: "cal/s",               symbol: "cal/s"  },
+      { id: "ftlbs", label: "ft·lb/s",             symbol: "ft·lb/s"},
+      { id: "ergs",  label: "erg/s",               symbol: "erg/s"  },
+    ],
+    toBase: {
+      uw:v=>v*1e-6, mw:v=>v*0.001, w:v=>v, kw:v=>v*1000,
+      megw:v=>v*1e6, gw:v=>v*1e9, tw:v=>v*1e12,
+      hp:v=>v*745.7, kss:v=>v*735.499,
+      btu_h:v=>v*0.293071, cal_s:v=>v*4.184, ftlbs:v=>v*1.35582, ergs:v=>v*1e-7,
+    },
+    fromBase: {
+      uw:v=>v/1e-6, mw:v=>v/0.001, w:v=>v, kw:v=>v/1000,
+      megw:v=>v/1e6, gw:v=>v/1e9, tw:v=>v/1e12,
+      hp:v=>v/745.7, kss:v=>v/735.499,
+      btu_h:v=>v/0.293071, cal_s:v=>v/4.184, ftlbs:v=>v/1.35582, ergs:v=>v/1e-7,
+    },
+  },
+  {
+    id: "data", label: "Data", icon: "💾", group: "Digitální",
+    units: [
+      { id: "bit",  label: "Bit",       symbol: "b"    },
+      { id: "byte", label: "Byte",      symbol: "B"    },
+      { id: "kb",   label: "Kilobyte",  symbol: "KB"   },
+      { id: "mb",   label: "Megabyte",  symbol: "MB"   },
+      { id: "gb",   label: "Gigabyte",  symbol: "GB"   },
+      { id: "tb",   label: "Terabyte",  symbol: "TB"   },
+      { id: "pb",   label: "Petabyte",  symbol: "PB"   },
+      { id: "eb",   label: "Exabyte",   symbol: "EB"   },
+      { id: "zb",   label: "Zettabyte", symbol: "ZB"   },
+      { id: "yb",   label: "Yottabyte", symbol: "YB"   },
+      { id: "kib",  label: "Kibibyte",  symbol: "KiB"  },
+      { id: "mib",  label: "Mebibyte",  symbol: "MiB"  },
+      { id: "gib",  label: "Gibibyte",  symbol: "GiB"  },
+      { id: "tib",  label: "Tebibyte",  symbol: "TiB"  },
+      { id: "eib",  label: "Exbibyte",  symbol: "EiB"  },
+      { id: "zib",  label: "Zebibyte",  symbol: "ZiB"  },
+      { id: "kbit", label: "Kilobit",   symbol: "Kbit" },
+      { id: "mbit", label: "Megabit",   symbol: "Mbit" },
+      { id: "gbit", label: "Gigabit",   symbol: "Gbit" },
+      { id: "tbit", label: "Terabit",   symbol: "Tbit" },
+    ],
+    toBase: {
+      bit:v=>v, byte:v=>v*8, kb:v=>v*8e3, mb:v=>v*8e6, gb:v=>v*8e9,
+      tb:v=>v*8e12, pb:v=>v*8e15, eb:v=>v*8e18, zb:v=>v*8e21, yb:v=>v*8e24,
+      kib:v=>v*8192, mib:v=>v*8388608, gib:v=>v*8589934592,
+      tib:v=>v*8796093022208, eib:v=>v*9.007e15, zib:v=>v*9.223e18,
+      kbit:v=>v*1e3, mbit:v=>v*1e6, gbit:v=>v*1e9, tbit:v=>v*1e12,
+    },
+    fromBase: {
+      bit:v=>v, byte:v=>v/8, kb:v=>v/8e3, mb:v=>v/8e6, gb:v=>v/8e9,
+      tb:v=>v/8e12, pb:v=>v/8e15, eb:v=>v/8e18, zb:v=>v/8e21, yb:v=>v/8e24,
+      kib:v=>v/8192, mib:v=>v/8388608, gib:v=>v/8589934592,
+      tib:v=>v/8796093022208, eib:v=>v/9.007e15, zib:v=>v/9.223e18,
+      kbit:v=>v/1e3, mbit:v=>v/1e6, gbit:v=>v/1e9, tbit:v=>v/1e12,
+    },
+  },
+  {
+    id: "angle", label: "Úhel", icon: "📐", group: "Geometrie",
+    units: [
+      { id: "deg",    label: "Stupeň",          symbol: "°"    },
+      { id: "rad",    label: "Radián",           symbol: "rad"  },
+      { id: "mrad",   label: "Miliradián",       symbol: "mrad" },
+      { id: "urad",   label: "Mikroradián",      symbol: "μrad" },
+      { id: "grad",   label: "Gradian (gon)",    symbol: "gon"  },
+      { id: "turn",   label: "Otáčka",           symbol: "ot"   },
+      { id: "arcmin", label: "Úhlová minuta",    symbol: "'"    },
+      { id: "arcsec", label: "Úhlová sekunda",   symbol: '"'    },
+      { id: "sign",   label: "Sign (zvěrokruh)", symbol: "sign" },
+      { id: "mil",    label: "Mil (NATO)",        symbol: "mil"  },
+      { id: "cpoint", label: "Point (kompas)",   symbol: "cpt"  },
+    ],
+    toBase: {
+      deg:v=>v, rad:v=>v*(180/Math.PI), mrad:v=>v*(0.18/Math.PI),
+      urad:v=>v*(0.00018/Math.PI), grad:v=>v*0.9, turn:v=>v*360,
+      arcmin:v=>v/60, arcsec:v=>v/3600, sign:v=>v*30,
+      mil:v=>v*360/6400, cpoint:v=>v*11.25,
+    },
+    fromBase: {
+      deg:v=>v, rad:v=>v*(Math.PI/180), mrad:v=>v*(Math.PI/0.18),
+      urad:v=>v*(Math.PI/0.00018), grad:v=>v/0.9, turn:v=>v/360,
+      arcmin:v=>v*60, arcsec:v=>v*3600, sign:v=>v/30,
+      mil:v=>v*6400/360, cpoint:v=>v/11.25,
+    },
+  },
+  {
+    id: "force", label: "Síla", icon: "💪", group: "Fyzika",
+    units: [
+      { id: "n",   label: "Newton",        symbol: "N"   },
+      { id: "kn",  label: "Kilonewton",    symbol: "kN"  },
+      { id: "mn",  label: "Meganewton",    symbol: "MN"  },
+      { id: "dyn", label: "Dyn",           symbol: "dyn" },
+      { id: "lbf", label: "Pound-force",   symbol: "lbf" },
+      { id: "kgf", label: "Kilogram-force",symbol: "kgf" },
+      { id: "gf",  label: "Gram-force",    symbol: "gf"  },
+      { id: "kip", label: "Kip",           symbol: "kip" },
+      { id: "pdl", label: "Poundal",       symbol: "pdl" },
+      { id: "ozf", label: "Ounce-force",   symbol: "ozf" },
+    ],
+    toBase: {
+      n:v=>v, kn:v=>v*1000, mn:v=>v*1e6, dyn:v=>v*1e-5,
+      lbf:v=>v*4.44822, kgf:v=>v*9.80665, gf:v=>v*0.00980665,
+      kip:v=>v*4448.22, pdl:v=>v*0.138255, ozf:v=>v*0.278014,
+    },
+    fromBase: {
+      n:v=>v, kn:v=>v/1000, mn:v=>v/1e6, dyn:v=>v/1e-5,
+      lbf:v=>v/4.44822, kgf:v=>v/9.80665, gf:v=>v/0.00980665,
+      kip:v=>v/4448.22, pdl:v=>v/0.138255, ozf:v=>v/0.278014,
+    },
+  },
+  {
+    id: "torque", label: "Moment síly", icon: "🔧", group: "Fyzika",
+    units: [
+      { id: "tor_nm", label: "Newton·metr",     symbol: "N·m"    },
+      { id: "knm",   label: "Kilonewton·metr", symbol: "kN·m"   },
+      { id: "mnm",   label: "Milinewton·metr", symbol: "mN·m"   },
+      { id: "lbfft", label: "lbf·ft",          symbol: "lbf·ft" },
+      { id: "lbfin", label: "lbf·in",          symbol: "lbf·in" },
+      { id: "kgfm",  label: "kgf·m",           symbol: "kgf·m"  },
+      { id: "kgfcm", label: "kgf·cm",          symbol: "kgf·cm" },
+      { id: "ozfin", label: "ozf·in",          symbol: "ozf·in" },
+      { id: "dyncm", label: "dyn·cm",          symbol: "dyn·cm" },
+    ],
+    toBase: {
+      tor_nm:v=>v, knm:v=>v*1000, mnm:v=>v*0.001,
+      lbfft:v=>v*1.35582, lbfin:v=>v*0.112985,
+      kgfm:v=>v*9.80665, kgfcm:v=>v*0.0980665,
+      ozfin:v=>v*0.00706155, dyncm:v=>v*1e-7,
+    },
+    fromBase: {
+      tor_nm:v=>v, knm:v=>v/1000, mnm:v=>v/0.001,
+      lbfft:v=>v/1.35582, lbfin:v=>v/0.112985,
+      kgfm:v=>v/9.80665, kgfcm:v=>v/0.0980665,
+      ozfin:v=>v/0.00706155, dyncm:v=>v/1e-7,
+    },
+  },
+  {
+    id: "frequency", label: "Frekvence", icon: "〰️", group: "Fyzika",
+    units: [
+      { id: "hz",   label: "Hertz",      symbol: "Hz"    },
+      { id: "khz",  label: "Kilohertz",  symbol: "kHz"   },
+      { id: "mhz",  label: "Megahertz",  symbol: "MHz"   },
+      { id: "ghz",  label: "Gigahertz",  symbol: "GHz"   },
+      { id: "thz",  label: "Terahertz",  symbol: "THz"   },
+      { id: "rpm",  label: "Otáčky/min", symbol: "rpm"   },
+      { id: "rps",  label: "Otáčky/s",   symbol: "rps"   },
+      { id: "rads", label: "rad/s",      symbol: "rad/s" },
+    ],
+    toBase: {
+      hz:v=>v, khz:v=>v*1e3, mhz:v=>v*1e6, ghz:v=>v*1e9, thz:v=>v*1e12,
+      rpm:v=>v/60, rps:v=>v, rads:v=>v/(2*Math.PI),
+    },
+    fromBase: {
+      hz:v=>v, khz:v=>v/1e3, mhz:v=>v/1e6, ghz:v=>v/1e9, thz:v=>v/1e12,
+      rpm:v=>v*60, rps:v=>v, rads:v=>v*(2*Math.PI),
+    },
+  },
+  {
+    id: "acceleration", label: "Zrychlení", icon: "📈", group: "Fyzika",
+    units: [
+      { id: "ms2a",  label: "m/s²",     symbol: "m/s²"  },
+      { id: "ga",    label: "g (tíhové)",symbol: "g"     },
+      { id: "cms2a", label: "cm/s²",    symbol: "cm/s²" },
+      { id: "fts2a", label: "ft/s²",    symbol: "ft/s²" },
+      { id: "gala",  label: "Gal",      symbol: "Gal"   },
+      { id: "kms2a", label: "km/s²",    symbol: "km/s²" },
+    ],
+    toBase: {
+      ms2a:v=>v, ga:v=>v*9.80665, cms2a:v=>v*0.01,
+      fts2a:v=>v*0.3048, gala:v=>v*0.01, kms2a:v=>v*1000,
+    },
+    fromBase: {
+      ms2a:v=>v, ga:v=>v/9.80665, cms2a:v=>v/0.01,
+      fts2a:v=>v/0.3048, gala:v=>v/0.01, kms2a:v=>v/1000,
+    },
+  },
+  {
+    id: "fuel", label: "Spotřeba paliva", icon: "⛽", group: "Doprava",
+    units: [
+      { id: "l100",  label: "l / 100 km", symbol: "l/100km" },
+      { id: "kml",   label: "km / l",     symbol: "km/l"    },
+      { id: "mpgus", label: "mpg (US)",   symbol: "mpg US"  },
+      { id: "mpguk", label: "mpg (UK)",   symbol: "mpg UK"  },
+      { id: "mil2",  label: "mi / l",     symbol: "mi/l"    },
+    ],
+    toBase: {
+      l100:v=>v, kml:v=>100/v, mpgus:v=>235.215/v, mpguk:v=>282.481/v, mil2:v=>62.1371/v,
+    },
+    fromBase: {
+      l100:v=>v, kml:v=>100/v, mpgus:v=>235.215/v, mpguk:v=>282.481/v, mil2:v=>62.1371/v,
+    },
+  },
+  {
+    id: "density", label: "Hustota", icon: "🧱", group: "Fyzika",
+    units: [
+      { id: "kgm3",  label: "kg/m³",   symbol: "kg/m³"  },
+      { id: "gcm3",  label: "g/cm³",   symbol: "g/cm³"  },
+      { id: "gl",    label: "g/l",     symbol: "g/l"    },
+      { id: "kgl",   label: "kg/l",    symbol: "kg/l"   },
+      { id: "mgml",  label: "mg/ml",   symbol: "mg/ml"  },
+      { id: "lbft3", label: "lb/ft³",  symbol: "lb/ft³" },
+      { id: "lbgal", label: "lb/gal",  symbol: "lb/gal" },
+      { id: "ozin3", label: "oz/in³",  symbol: "oz/in³" },
+    ],
+    toBase: {
+      kgm3:v=>v, gcm3:v=>v*1000, gl:v=>v, kgl:v=>v*1000, mgml:v=>v,
+      lbft3:v=>v*16.0185, lbgal:v=>v*119.826, ozin3:v=>v*1729.99,
+    },
+    fromBase: {
+      kgm3:v=>v, gcm3:v=>v/1000, gl:v=>v, kgl:v=>v/1000, mgml:v=>v,
+      lbft3:v=>v/16.0185, lbgal:v=>v/119.826, ozin3:v=>v/1729.99,
+    },
+  },
+  {
+    id: "flow", label: "Průtok", icon: "🌊", group: "Fyzika",
+    units: [
+      { id: "m3s", label: "m³/s",   symbol: "m³/s"  },
+      { id: "m3h", label: "m³/h",   symbol: "m³/h"  },
+      { id: "ls",  label: "l/s",    symbol: "l/s"   },
+      { id: "lm",  label: "l/min",  symbol: "l/min" },
+      { id: "lh",  label: "l/h",    symbol: "l/h"   },
+      { id: "gpm", label: "GPM (US)",symbol:"GPM"   },
+      { id: "cfm", label: "CFM",    symbol: "CFM"   },
+      { id: "cfs", label: "CFS",    symbol: "CFS"   },
+    ],
+    toBase: {
+      m3s:v=>v, m3h:v=>v/3600, ls:v=>v*0.001, lm:v=>v/60000,
+      lh:v=>v/3600000, gpm:v=>v*6.30902e-5, cfm:v=>v*0.000471947, cfs:v=>v*0.0283168,
+    },
+    fromBase: {
+      m3s:v=>v, m3h:v=>v*3600, ls:v=>v/0.001, lm:v=>v*60000,
+      lh:v=>v*3600000, gpm:v=>v/6.30902e-5, cfm:v=>v/0.000471947, cfs:v=>v/0.0283168,
+    },
+  },
+  {
+    id: "voltage", label: "El. napětí", icon: "🔌", group: "Elektřina",
+    units: [
+      { id: "uv",  label: "Mikrovolt", symbol: "μV" },
+      { id: "mv",  label: "Milivolt",  symbol: "mV" },
+      { id: "v",   label: "Volt",      symbol: "V"  },
+      { id: "kv",  label: "Kilovolt",  symbol: "kV" },
+      { id: "MV",  label: "Megavolt",  symbol: "MV" },
+    ],
+    toBase: { uv:v=>v*1e-6, mv:v=>v*0.001, v:v=>v, kv:v=>v*1000, MV:v=>v*1e6 },
+    fromBase: { uv:v=>v/1e-6, mv:v=>v/0.001, v:v=>v, kv:v=>v/1000, MV:v=>v/1e6 },
+  },
+  {
+    id: "current", label: "El. proud", icon: "🔌", group: "Elektřina",
+    units: [
+      { id: "ua", label: "Mikroampér", symbol: "μA" },
+      { id: "ma", label: "Miliampér",  symbol: "mA" },
+      { id: "a",  label: "Ampér",      symbol: "A"  },
+      { id: "ka", label: "Kiloampér",  symbol: "kA" },
+    ],
+    toBase: { ua:v=>v*1e-6, ma:v=>v*0.001, a:v=>v, ka:v=>v*1000 },
+    fromBase: { ua:v=>v/1e-6, ma:v=>v/0.001, a:v=>v, ka:v=>v/1000 },
+  },
+  {
+    id: "resistance", label: "El. odpor", icon: "🔋", group: "Elektřina",
+    units: [
+      { id: "uohm",  label: "Mikroohm", symbol: "μΩ" },
+      { id: "mohm",  label: "Miliohm",  symbol: "mΩ" },
+      { id: "ohm",   label: "Ohm",      symbol: "Ω"  },
+      { id: "kohm",  label: "Kilohm",   symbol: "kΩ" },
+      { id: "Mohm",  label: "Megaohm",  symbol: "MΩ" },
+      { id: "Gohm",  label: "Gigaohm",  symbol: "GΩ" },
+    ],
+    toBase: { uohm:v=>v*1e-6, mohm:v=>v*0.001, ohm:v=>v, kohm:v=>v*1e3, Mohm:v=>v*1e6, Gohm:v=>v*1e9 },
+    fromBase: { uohm:v=>v/1e-6, mohm:v=>v/0.001, ohm:v=>v, kohm:v=>v/1e3, Mohm:v=>v/1e6, Gohm:v=>v/1e9 },
+  },
+  {
+    id: "capacitance", label: "El. kapacita", icon: "🔆", group: "Elektřina",
+    units: [
+      { id: "pf", label: "Pikofarad",  symbol: "pF" },
+      { id: "nf", label: "Nanofarad",  symbol: "nF" },
+      { id: "uf", label: "Mikrofarad", symbol: "μF" },
+      { id: "mf", label: "Milifarad",  symbol: "mF" },
+      { id: "f",  label: "Farad",      symbol: "F"  },
+      { id: "kf", label: "Kilofarad",  symbol: "kF" },
+    ],
+    toBase: { pf:v=>v*1e-12, nf:v=>v*1e-9, uf:v=>v*1e-6, mf:v=>v*0.001, f:v=>v, kf:v=>v*1000 },
+    fromBase: { pf:v=>v/1e-12, nf:v=>v/1e-9, uf:v=>v/1e-6, mf:v=>v/0.001, f:v=>v, kf:v=>v/1000 },
+  },
+  {
+    id: "inductance", label: "El. indukčnost", icon: "🌀", group: "Elektřina",
+    units: [
+      { id: "nh", label: "Nanohenry",  symbol: "nH" },
+      { id: "uh", label: "Mikrohenry", symbol: "μH" },
+      { id: "mh", label: "Milihenry",  symbol: "mH" },
+      { id: "henry",  label: "Henry",      symbol: "H"  },
+      { id: "kh", label: "Kilohenry",  symbol: "kH" },
+    ],
+    toBase: { nh:v=>v*1e-9, uh:v=>v*1e-6, mh:v=>v*0.001, henry:v=>v, kh:v=>v*1000 },
+    fromBase: { nh:v=>v/1e-9, uh:v=>v/1e-6, mh:v=>v/0.001, henry:v=>v, kh:v=>v/1000 },
+  },
+  {
+    id: "charge", label: "El. náboj", icon: "🔋", group: "Elektřina",
+    units: [
+      { id: "nc",  label: "Nanocoulomb",      symbol: "nC"  },
+      { id: "uc",  label: "Mikrocoulomb",     symbol: "μC"  },
+      { id: "mc",  label: "Milicoulomb",      symbol: "mC"  },
+      { id: "c2",  label: "Coulomb",          symbol: "C"   },
+      { id: "kc",  label: "Kilocoulomb",      symbol: "kC"  },
+      { id: "ah",  label: "Ampérhodina",      symbol: "Ah"  },
+      { id: "mah", label: "Miliampérhodina",  symbol: "mAh" },
+      { id: "fdy", label: "Faraday",          symbol: "Fd"  },
+    ],
+    toBase: {
+      nc:v=>v*1e-9, uc:v=>v*1e-6, mc:v=>v*0.001, c2:v=>v,
+      kc:v=>v*1000, ah:v=>v*3600, mah:v=>v*3.6, fdy:v=>v*96485,
+    },
+    fromBase: {
+      nc:v=>v/1e-9, uc:v=>v/1e-6, mc:v=>v/0.001, c2:v=>v,
+      kc:v=>v/1000, ah:v=>v/3600, mah:v=>v/3.6, fdy:v=>v/96485,
+    },
+  },
+  {
+    id: "magnetic", label: "Mag. indukce", icon: "🧲", group: "Elektřina",
+    units: [
+      { id: "ut",  label: "Mikrotesla", symbol: "μT" },
+      { id: "mt",  label: "Militesla",  symbol: "mT" },
+      { id: "t2",  label: "Tesla",      symbol: "T"  },
+      { id: "kt",  label: "Kilotesla",  symbol: "kT" },
+      { id: "gs",  label: "Gauss",      symbol: "G"  },
+      { id: "mgs", label: "Miligauss",  symbol: "mG" },
+    ],
+    toBase: { ut:v=>v*1e-6, mt:v=>v*0.001, t2:v=>v, kt:v=>v*1000, gs:v=>v*0.0001, mgs:v=>v*1e-7 },
+    fromBase: { ut:v=>v/1e-6, mt:v=>v/0.001, t2:v=>v, kt:v=>v/1000, gs:v=>v/0.0001, mgs:v=>v/1e-7 },
+  },
+  {
+    id: "illuminance", label: "Osvětlenost", icon: "☀️", group: "Světlo",
+    units: [
+      { id: "lx",  label: "Lux",         symbol: "lx"  },
+      { id: "fc",  label: "Foot-candle", symbol: "fc"  },
+      { id: "ph",  label: "Phot",        symbol: "ph"  },
+      { id: "mlx", label: "Milolux",     symbol: "mlx" },
+      { id: "klx", label: "Kilolux",     symbol: "klx" },
+    ],
+    toBase: { lx:v=>v, fc:v=>v*10.7639, ph:v=>v*10000, mlx:v=>v*0.001, klx:v=>v*1000 },
+    fromBase: { lx:v=>v, fc:v=>v/10.7639, ph:v=>v/10000, mlx:v=>v/0.001, klx:v=>v/1000 },
+  },
+  {
+    id: "radioactivity", label: "Radioaktivita", icon: "☢️", group: "Záření",
+    units: [
+      { id: "bq",  label: "Becquerel",    symbol: "Bq"  },
+      { id: "kbq", label: "Kilobecquerel",symbol: "kBq" },
+      { id: "mbq", label: "Megabecquerel",symbol: "MBq" },
+      { id: "gbq", label: "Gigabecquerel",symbol: "GBq" },
+      { id: "ci",  label: "Curie",        symbol: "Ci"  },
+      { id: "mci", label: "Milicurie",    symbol: "mCi" },
+      { id: "uci", label: "Mikrocurie",   symbol: "μCi" },
+    ],
+    toBase: {
+      bq:v=>v, kbq:v=>v*1e3, mbq:v=>v*1e6, gbq:v=>v*1e9,
+      ci:v=>v*3.7e10, mci:v=>v*3.7e7, uci:v=>v*3.7e4,
+    },
+    fromBase: {
+      bq:v=>v, kbq:v=>v/1e3, mbq:v=>v/1e6, gbq:v=>v/1e9,
+      ci:v=>v/3.7e10, mci:v=>v/3.7e7, uci:v=>v/3.7e4,
+    },
+  },
+  {
+    id: "dose", label: "Absorb. dávka", icon: "🏥", group: "Záření",
+    units: [
+      { id: "gy",   label: "Gray",     symbol: "Gy"   },
+      { id: "mgy",  label: "Miligray", symbol: "mGy"  },
+      { id: "ugy",  label: "Mikrogray",symbol: "μGy"  },
+      { id: "rads2", label: "Rad",      symbol: "rad"  },
+      { id: "mrad2", label: "Milirad",  symbol: "mrad" },
+    ],
+    toBase: { gy:v=>v, mgy:v=>v*0.001, ugy:v=>v*1e-6, rads2:v=>v*0.01, mrad2:v=>v*1e-5 },
+    fromBase: { gy:v=>v, mgy:v=>v/0.001, ugy:v=>v/1e-6, rads2:v=>v/0.01, mrad2:v=>v/1e-5 },
+  },
+  {
+    id: "equivdose", label: "Ekv. dávka záření", icon: "☣️", group: "Záření",
+    units: [
+      { id: "sv",   label: "Sievert",     symbol: "Sv"   },
+      { id: "msv",  label: "Milisievert", symbol: "mSv"  },
+      { id: "usv",  label: "Mikrosievert",symbol: "μSv"  },
+      { id: "rem2", label: "Rem",         symbol: "rem"  },
+      { id: "mrem", label: "Milirem",     symbol: "mrem" },
+    ],
+    toBase: { sv:v=>v, msv:v=>v*0.001, usv:v=>v*1e-6, rem2:v=>v*0.01, mrem:v=>v*1e-5 },
+    fromBase: { sv:v=>v, msv:v=>v/0.001, usv:v=>v/1e-6, rem2:v=>v/0.01, mrem:v=>v/1e-5 },
+  },
+  {
+    id: "dynvisc", label: "Dyn. viskozita", icon: "🫧", group: "Fyzika",
+    units: [
+      { id: "pas",  label: "Pascal·sekunda", symbol: "Pa·s"    },
+      { id: "mpas", label: "mPa·s",          symbol: "mPa·s"   },
+      { id: "cp",   label: "Centipoise",      symbol: "cP"      },
+      { id: "p2",   label: "Poise",           symbol: "P"       },
+    ],
+    toBase: { pas:v=>v, mpas:v=>v*0.001, cp:v=>v*0.001, p2:v=>v*0.1 },
+    fromBase: { pas:v=>v, mpas:v=>v/0.001, cp:v=>v/0.001, p2:v=>v/0.1 },
+  },
+  {
+    id: "kinvisc", label: "Kin. viskozita", icon: "💧", group: "Fyzika",
+    units: [
+      { id: "m2s",  label: "m²/s",    symbol: "m²/s"  },
+      { id: "mm2s", label: "mm²/s",   symbol: "mm²/s" },
+      { id: "cst",  label: "Centistokes",symbol:"cSt"  },
+      { id: "stz",  label: "Stokes",   symbol: "St"   },
+    ],
+    toBase: { m2s:v=>v, mm2s:v=>v*1e-6, cst:v=>v*1e-6, stz:v=>v*1e-4 },
+    fromBase: { m2s:v=>v, mm2s:v=>v/1e-6, cst:v=>v/1e-6, stz:v=>v/1e-4 },
+  },
+  {
+    id: "substance", label: "Množství látky", icon: "🔬", group: "Chemie",
+    units: [
+      { id: "nmol", label: "Nanomol",  symbol: "nmol" },
+      { id: "umol", label: "Mikromol", symbol: "μmol" },
+      { id: "mmol", label: "Milimol",  symbol: "mmol" },
+      { id: "mol",  label: "Mol",      symbol: "mol"  },
+      { id: "kmol", label: "Kilomol",  symbol: "kmol" },
+      { id: "Mmol", label: "Megamol",  symbol: "Mmol" },
+    ],
+    toBase: { nmol:v=>v*1e-9, umol:v=>v*1e-6, mmol:v=>v*0.001, mol:v=>v, kmol:v=>v*1000, Mmol:v=>v*1e6 },
+    fromBase: { nmol:v=>v/1e-9, umol:v=>v/1e-6, mmol:v=>v/0.001, mol:v=>v, kmol:v=>v/1000, Mmol:v=>v/1e6 },
+  },
+  {
+    id: "concentration", label: "Koncentrace", icon: "🧫", group: "Chemie",
+    units: [
+      { id: "moll",  label: "mol/l",    symbol: "mol/l"  },
+      { id: "mmoll", label: "mmol/l",   symbol: "mmol/l" },
+      { id: "umoll", label: "μmol/l",   symbol: "μmol/l" },
+      { id: "gl2",   label: "g/l",      symbol: "g/l"    },
+      { id: "mgdl",  label: "mg/dl",    symbol: "mg/dl"  },
+      { id: "ppm",   label: "ppm",      symbol: "ppm"    },
+      { id: "ppb",   label: "ppb",      symbol: "ppb"    },
+      { id: "ppt",   label: "ppt",      symbol: "ppt"    },
+      { id: "pct",   label: "Procento", symbol: "%"      },
+    ],
+    toBase: {
+      moll:v=>v*1e6, mmoll:v=>v*1e3, umoll:v=>v,
+      gl2:v=>v*1000, mgdl:v=>v*10,
+      ppm:v=>v, ppb:v=>v*0.001, ppt:v=>v*1e-6, pct:v=>v*10000,
+    },
+    fromBase: {
+      moll:v=>v/1e6, mmoll:v=>v/1e3, umoll:v=>v,
+      gl2:v=>v/1000, mgdl:v=>v/10,
+      ppm:v=>v, ppb:v=>v/0.001, ppt:v=>v/1e-6, pct:v=>v/10000,
+    },
+  },
+  {
+    id: "typography", label: "Typografie", icon: "🔤", group: "Digitální",
+    units: [
+      { id: "px",  label: "Pixel (96 dpi)", symbol: "px" },
+      { id: "pt3", label: "Point",          symbol: "pt" },
+      { id: "pc3", label: "Pica",           symbol: "pc" },
+      { id: "typ_mm", label: "Milimetr",       symbol: "mm" },
+      { id: "typ_cm", label: "Centimetr",      symbol: "cm" },
+      { id: "typ_in", label: "Palec",          symbol: "in" },
+      { id: "em",  label: "Em (16px base)", symbol: "em" },
+    ],
+    toBase: {
+      px:v=>v, pt3:v=>v*1.333333, pc3:v=>v*16,
+      typ_mm:v=>v*3.779528, typ_cm:v=>v*37.79528, typ_in:v=>v*96, em:v=>v*16,
+    },
+    fromBase: {
+      px:v=>v, pt3:v=>v/1.333333, pc3:v=>v/16,
+      typ_mm:v=>v/3.779528, typ_cm:v=>v/37.79528, typ_in:v=>v/96, em:v=>v/16,
+    },
+  },
+  // ── FORCE PER LENGTH ──
+  {
+    id: "forcePerLength", label: "Síla na délku", icon: "📌", group: "Fyzika",
+    units: [
+      { id: "npm",   label: "N/m",     symbol: "N/m"    },
+      { id: "fpl_knm",   label: "kN/m",    symbol: "kN/m"   },
+      { id: "fpl_mnm",   label: "MN/m",    symbol: "MN/m"   },
+      { id: "nmm2",  label: "N/mm",    symbol: "N/mm"   },
+      { id: "kncm",  label: "kN/cm",   symbol: "kN/cm"  },
+      { id: "danm",  label: "daN/m",   symbol: "daN/m"  },
+      { id: "fpl_kgfm",  label: "kgf/m",   symbol: "kgf/m"  },
+      { id: "fpl_lbfft", label: "lbf/ft",  symbol: "lbf/ft" },
+      { id: "fpl_lbfin", label: "lbf/in",  symbol: "lbf/in" },
+      { id: "dynm",  label: "dyn/cm",  symbol: "dyn/cm" },
+    ],
+    // base: N/m
+    toBase: {
+      npm:v=>v, fpl_knm:v=>v*1000, fpl_mnm:v=>v*1e6, nmm2:v=>v*1000,
+      kncm:v=>v*100000, danm:v=>v*10, fpl_kgfm:v=>v*9.80665,
+      fpl_lbfft:v=>v*14.5939, fpl_lbfin:v=>v*175.127, dynm:v=>v*0.001,
+    },
+    fromBase: {
+      npm:v=>v, fpl_knm:v=>v/1000, fpl_mnm:v=>v/1e6, nmm2:v=>v/1000,
+      kncm:v=>v/100000, danm:v=>v/10, fpl_kgfm:v=>v/9.80665,
+      fpl_lbfft:v=>v/14.5939, fpl_lbfin:v=>v/175.127, dynm:v=>v/0.001,
+    },
+  },
+  // ── MASS FLUX ──
+  {
+    id: "massFlux", label: "Hmotnostní průtok", icon: "🏭", group: "Fyzika",
+    units: [
+      { id: "kgs",   label: "kg/s",    symbol: "kg/s"   },
+      { id: "kgmin", label: "kg/min",  symbol: "kg/min" },
+      { id: "kgh",   label: "kg/h",    symbol: "kg/h"   },
+      { id: "mf_gs",    label: "g/s",     symbol: "g/s"    },
+      { id: "gmin",  label: "g/min",   symbol: "g/min"  },
+      { id: "th",    label: "t/h",     symbol: "t/h"    },
+      { id: "mf_lbs",   label: "lb/s",    symbol: "lb/s"   },
+      { id: "lbmin", label: "lb/min",  symbol: "lb/min" },
+      { id: "lbh",   label: "lb/h",    symbol: "lb/h"   },
+      { id: "ozs",   label: "oz/s",    symbol: "oz/s"   },
+    ],
+    // base: kg/s
+    toBase: {
+      kgs:v=>v, kgmin:v=>v/60, kgh:v=>v/3600, mf_gs:v=>v*0.001,
+      gmin:v=>v/60000, th:v=>v/3.6, mf_lbs:v=>v*0.453592,
+      lbmin:v=>v*0.453592/60, lbh:v=>v*0.453592/3600, ozs:v=>v*0.0283495,
+    },
+    fromBase: {
+      kgs:v=>v, kgmin:v=>v*60, kgh:v=>v*3600, mf_gs:v=>v/0.001,
+      gmin:v=>v*60000, th:v=>v*3.6, mf_lbs:v=>v/0.453592,
+      lbmin:v=>v*60/0.453592, lbh:v=>v*3600/0.453592, ozs:v=>v/0.0283495,
+    },
+  },
+  // ── LUMINOUS INTENSITY ──
+  {
+    id: "luminousIntensity", label: "Světivost", icon: "🕯️", group: "Světlo",
+    units: [
+      { id: "cd",   label: "Kandela",      symbol: "cd"   },
+      { id: "mcd",  label: "Milikandela",  symbol: "mcd"  },
+      { id: "kcd",  label: "Kilokandela",  symbol: "kcd"  },
+      { id: "li_cp",   label: "Candle power", symbol: "cp"   },
+      { id: "hef",  label: "Hefnerkerze",  symbol: "HK"   },
+    ],
+    // base: cd
+    toBase: { cd:v=>v, mcd:v=>v*0.001, kcd:v=>v*1000, li_cp:v=>v*0.981, hef:v=>v*0.903 },
+    fromBase: { cd:v=>v, mcd:v=>v/0.001, kcd:v=>v/1000, li_cp:v=>v/0.981, hef:v=>v/0.903 },
+  },
+  // ── LUMINOUS FLUX ──
+  {
+    id: "luminousFlux", label: "Světelný tok", icon: "✨", group: "Světlo",
+    units: [
+      { id: "lf_lm",   label: "Lumen",        symbol: "lm"   },
+      { id: "klm",  label: "Kilolumen",     symbol: "klm"  },
+      { id: "mlm",  label: "Milolumen",     symbol: "mlm"  },
+      { id: "cdsrv",label: "cd·sr",         symbol: "cd·sr"},
+    ],
+    toBase: { lf_lm:v=>v, klm:v=>v*1000, mlm:v=>v*0.001, cdsrv:v=>v },
+    fromBase: { lf_lm:v=>v, klm:v=>v/1000, mlm:v=>v/0.001, cdsrv:v=>v },
+  },
+  // ── BRIGHTNESS / LUMINANCE ──
+  {
+    id: "brightness", label: "Jas", icon: "🌟", group: "Světlo",
+    units: [
+      { id: "cdm2",  label: "cd/m² (Nit)",  symbol: "cd/m²" },
+      { id: "kcdm2", label: "kcd/m²",       symbol: "kcd/m²"},
+      { id: "mcdm2", label: "mcd/m²",       symbol: "mcd/m²"},
+      { id: "sb",    label: "Stilb",         symbol: "sb"    },
+      { id: "asb",   label: "Apostilb",      symbol: "asb"   },
+      { id: "L",     label: "Lambert",       symbol: "L"     },
+      { id: "fL",    label: "Foot-lambert",  symbol: "fL"    },
+      { id: "cdf2",  label: "cd/ft²",        symbol: "cd/ft²"},
+      { id: "cdin2", label: "cd/in²",        symbol: "cd/in²"},
+    ],
+    // base: cd/m²
+    toBase: {
+      cdm2:v=>v, kcdm2:v=>v*1000, mcdm2:v=>v*0.001,
+      sb:v=>v*10000, asb:v=>v/Math.PI, L:v=>v*10000/Math.PI,
+      fL:v=>v*3.42626, cdf2:v=>v*10.7639, cdin2:v=>v*1550,
+    },
+    fromBase: {
+      cdm2:v=>v, kcdm2:v=>v/1000, mcdm2:v=>v/0.001,
+      sb:v=>v/10000, asb:v=>v*Math.PI, L:v=>v*Math.PI/10000,
+      fL:v=>v/3.42626, cdf2:v=>v/10.7639, cdin2:v=>v/1550,
+    },
+  },
+  // ── DATA TRANSFER RATE ──
+  {
+    id: "dataTransfer", label: "Datový přenos", icon: "📡", group: "Digitální",
+    units: [
+      { id: "bs",    label: "bit/s (bps)",   symbol: "bit/s"  },
+      { id: "kbs",   label: "kbit/s (kbps)", symbol: "kbit/s" },
+      { id: "mbs",   label: "Mbit/s (Mbps)", symbol: "Mbit/s" },
+      { id: "gbs",   label: "Gbit/s (Gbps)", symbol: "Gbit/s" },
+      { id: "tbs",   label: "Tbit/s (Tbps)", symbol: "Tbit/s" },
+      { id: "Bps",   label: "B/s",           symbol: "B/s"    },
+      { id: "kBps",  label: "kB/s",          symbol: "kB/s"   },
+      { id: "mBps",  label: "MB/s",          symbol: "MB/s"   },
+      { id: "gBps",  label: "GB/s",          symbol: "GB/s"   },
+      { id: "tBps",  label: "TB/s",          symbol: "TB/s"   },
+      { id: "kibs",  label: "Kibit/s",       symbol: "Kibit/s"},
+      { id: "mibs",  label: "Mibit/s",       symbol: "Mibit/s"},
+      { id: "gibs",  label: "Gibit/s",       symbol: "Gibit/s"},
+    ],
+    // base: bit/s
+    toBase: {
+      bs:v=>v, kbs:v=>v*1e3, mbs:v=>v*1e6, gbs:v=>v*1e9, tbs:v=>v*1e12,
+      Bps:v=>v*8, kBps:v=>v*8e3, mBps:v=>v*8e6, gBps:v=>v*8e9, tBps:v=>v*8e12,
+      kibs:v=>v*1024, mibs:v=>v*1048576, gibs:v=>v*1073741824,
+    },
+    fromBase: {
+      bs:v=>v, kbs:v=>v/1e3, mbs:v=>v/1e6, gbs:v=>v/1e9, tbs:v=>v/1e12,
+      Bps:v=>v/8, kBps:v=>v/8e3, mBps:v=>v/8e6, gBps:v=>v/8e9, tBps:v=>v/8e12,
+      kibs:v=>v/1024, mibs:v=>v/1048576, gibs:v=>v/1073741824,
+    },
+  },
+  // ── THERMAL CONDUCTIVITY ──
+  {
+    id: "thermalCond", label: "Tepelná vodivost", icon: "🌡️", group: "Teplo",
+    units: [
+      { id: "tc_wmk",    label: "W/(m·K)",        symbol: "W/(m·K)"       },
+      { id: "tc_mwmk",   label: "mW/(m·K)",       symbol: "mW/(m·K)"      },
+      { id: "tc_kwmk",   label: "kW/(m·K)",       symbol: "kW/(m·K)"      },
+      { id: "tc_btu",    label: "BTU/(h·ft·°F)",  symbol: "BTU/(h·ft·°F)" },
+      { id: "tc_kcal",   label: "kcal/(h·m·°C)",  symbol: "kcal/(h·m·°C)" },
+      { id: "tc_cal",    label: "cal/(s·cm·°C)",  symbol: "cal/(s·cm·°C)" },
+    ],
+    toBase:   { tc_wmk:v=>v, tc_mwmk:v=>v*0.001, tc_kwmk:v=>v*1000, tc_btu:v=>v*1.73073, tc_kcal:v=>v*1.163, tc_cal:v=>v*418.68 },
+    fromBase: { tc_wmk:v=>v, tc_mwmk:v=>v/0.001, tc_kwmk:v=>v/1000, tc_btu:v=>v/1.73073, tc_kcal:v=>v/1.163, tc_cal:v=>v/418.68 },
+  },
+  // ── SPECIFIC HEAT CAPACITY ──
+  {
+    id: "specificHeat", label: "Měrná tep. kapacita", icon: "♨️", group: "Teplo",
+    units: [
+      { id: "sh_jkgk",   label: "J/(kg·K)",       symbol: "J/(kg·K)"      },
+      { id: "sh_kjkgk",  label: "kJ/(kg·K)",      symbol: "kJ/(kg·K)"     },
+      { id: "sh_calggk", label: "cal/(g·°C)",      symbol: "cal/(g·°C)"    },
+      { id: "sh_btulbf", label: "BTU/(lb·°F)",     symbol: "BTU/(lb·°F)"   },
+      { id: "sh_jgk",    label: "J/(g·K)",         symbol: "J/(g·K)"       },
+      { id: "sh_whkgk",  label: "Wh/(kg·K)",       symbol: "Wh/(kg·K)"     },
+    ],
+    toBase:   { sh_jkgk:v=>v, sh_kjkgk:v=>v*1000, sh_calggk:v=>v*4186.8, sh_btulbf:v=>v*4186.8, sh_jgk:v=>v*1000, sh_whkgk:v=>v*3600 },
+    fromBase: { sh_jkgk:v=>v, sh_kjkgk:v=>v/1000, sh_calggk:v=>v/4186.8, sh_btulbf:v=>v/4186.8, sh_jgk:v=>v/1000, sh_whkgk:v=>v/3600 },
+  },
+  // ── HEAT FLUX ──
+  {
+    id: "heatFlux", label: "Hustota tep. toku", icon: "🔥", group: "Teplo",
+    units: [
+      { id: "hf_wm2",    label: "W/m²",            symbol: "W/m²"           },
+      { id: "hf_kwm2",   label: "kW/m²",           symbol: "kW/m²"          },
+      { id: "hf_mwm2",   label: "MW/m²",           symbol: "MW/m²"          },
+      { id: "hf_btu",    label: "BTU/(h·ft²)",      symbol: "BTU/(h·ft²)"    },
+      { id: "hf_kcal",   label: "kcal/(h·m²)",      symbol: "kcal/(h·m²)"    },
+      { id: "hf_cal",    label: "cal/(s·cm²)",       symbol: "cal/(s·cm²)"    },
+    ],
+    toBase:   { hf_wm2:v=>v, hf_kwm2:v=>v*1000, hf_mwm2:v=>v*1e6, hf_btu:v=>v*3.15459, hf_kcal:v=>v*1.16279, hf_cal:v=>v*41868 },
+    fromBase: { hf_wm2:v=>v, hf_kwm2:v=>v/1000, hf_mwm2:v=>v/1e6, hf_btu:v=>v/3.15459, hf_kcal:v=>v/1.16279, hf_cal:v=>v/41868 },
+  },
+  // ── THERMAL RESISTANCE (R-VALUE) ──
+  {
+    id: "thermalRes", label: "Tepelný odpor (R)", icon: "🧱", group: "Teplo",
+    units: [
+      { id: "tr_m2kw",   label: "m²·K/W (RSI)",    symbol: "m²·K/W"         },
+      { id: "tr_cm2kw",  label: "cm²·K/W",         symbol: "cm²·K/W"        },
+      { id: "tr_ft2hbtu",label: "ft²·h·°F/BTU (R)", symbol: "ft²·h·°F/BTU"  },
+      { id: "tr_m2hkcal",label: "m²·h·°C/kcal",    symbol: "m²·h·°C/kcal"  },
+      { id: "tr_kw",     label: "K/W",              symbol: "K/W"            },
+    ],
+    toBase:   { tr_m2kw:v=>v, tr_cm2kw:v=>v*0.0001, tr_ft2hbtu:v=>v*0.17611, tr_m2hkcal:v=>v*0.86, tr_kw:v=>v },
+    fromBase: { tr_m2kw:v=>v, tr_cm2kw:v=>v/0.0001, tr_ft2hbtu:v=>v/0.17611, tr_m2hkcal:v=>v/0.86, tr_kw:v=>v },
+  },
+  // ── CALORIFIC VALUE ──
+  {
+    id: "calorificVal", label: "Výhřevnost", icon: "⛽", group: "Teplo",
+    units: [
+      { id: "cv_mjkg",   label: "MJ/kg",            symbol: "MJ/kg"          },
+      { id: "cv_kjkg",   label: "kJ/kg",            symbol: "kJ/kg"          },
+      { id: "cv_jkg",    label: "J/kg",             symbol: "J/kg"           },
+      { id: "cv_kwh",    label: "kWh/kg",           symbol: "kWh/kg"         },
+      { id: "cv_mwh",    label: "MWh/kg",           symbol: "MWh/kg"         },
+      { id: "cv_btulb",  label: "BTU/lb",           symbol: "BTU/lb"         },
+      { id: "cv_kcalkg", label: "kcal/kg",          symbol: "kcal/kg"        },
+      { id: "cv_calg",   label: "cal/g",            symbol: "cal/g"          },
+      { id: "cv_mjm3",   label: "MJ/m³ (plyn)",     symbol: "MJ/m³"          },
+      { id: "cv_kjl",    label: "kJ/l",             symbol: "kJ/l"           },
+    ],
+    toBase:   { cv_mjkg:v=>v, cv_kjkg:v=>v*0.001, cv_jkg:v=>v*1e-6, cv_kwh:v=>v*3.6, cv_mwh:v=>v*3600, cv_btulb:v=>v*0.002326, cv_kcalkg:v=>v*0.0041868, cv_calg:v=>v*0.0041868, cv_mjm3:v=>v, cv_kjl:v=>v },
+    fromBase: { cv_mjkg:v=>v, cv_kjkg:v=>v/0.001, cv_jkg:v=>v/1e-6, cv_kwh:v=>v/3.6, cv_mwh:v=>v/3600, cv_btulb:v=>v/0.002326, cv_kcalkg:v=>v/0.0041868, cv_calg:v=>v/0.0041868, cv_mjm3:v=>v, cv_kjl:v=>v },
+  },
+  // ── SECOND MOMENT OF AREA ──
+  {
+    id: "secMomentArea", label: "Mom. setrvačnosti průřezu", icon: "🏗️", group: "Stavebnictví",
+    units: [
+      { id: "sm_mm4",    label: "mm⁴",              symbol: "mm⁴"            },
+      { id: "sm_cm4",    label: "cm⁴",              symbol: "cm⁴"            },
+      { id: "sm_dm4",    label: "dm⁴",              symbol: "dm⁴"            },
+      { id: "sm_m4",     label: "m⁴",               symbol: "m⁴"             },
+      { id: "sm_in4",    label: "in⁴",              symbol: "in⁴"            },
+      { id: "sm_ft4",    label: "ft⁴",              symbol: "ft⁴"            },
+    ],
+    toBase:   { sm_mm4:v=>v, sm_cm4:v=>v*1e4, sm_dm4:v=>v*1e8, sm_m4:v=>v*1e12, sm_in4:v=>v*416231.426, sm_ft4:v=>v*8.6309e9 },
+    fromBase: { sm_mm4:v=>v, sm_cm4:v=>v/1e4, sm_dm4:v=>v/1e8, sm_m4:v=>v/1e12, sm_in4:v=>v/416231.426, sm_ft4:v=>v/8.6309e9 },
+  },
+  // ── SECTION MODULUS ──
+  {
+    id: "sectionMod", label: "Průřezový modul", icon: "📐", group: "Stavebnictví",
+    units: [
+      { id: "sec_mm3",   label: "mm³",              symbol: "mm³"            },
+      { id: "sec_cm3",   label: "cm³",              symbol: "cm³"            },
+      { id: "sec_dm3",   label: "dm³",              symbol: "dm³"            },
+      { id: "sec_m3",    label: "m³",               symbol: "m³"             },
+      { id: "sec_in3",   label: "in³",              symbol: "in³"            },
+      { id: "sec_ft3",   label: "ft³",              symbol: "ft³"            },
+    ],
+    toBase:   { sec_mm3:v=>v, sec_cm3:v=>v*1000, sec_dm3:v=>v*1e6, sec_m3:v=>v*1e9, sec_in3:v=>v*16387.064, sec_ft3:v=>v*2.8317e7 },
+    fromBase: { sec_mm3:v=>v, sec_cm3:v=>v/1000, sec_dm3:v=>v/1e6, sec_m3:v=>v/1e9, sec_in3:v=>v/16387.064, sec_ft3:v=>v/2.8317e7 },
+  },
+  // ── MASS MOMENT OF INERTIA ──
+  {
+    id: "massMOI", label: "Mom. setrvačnosti hmoty", icon: "⚙️", group: "Stavebnictví",
+    units: [
+      { id: "mi_kgm2",   label: "kg·m²",            symbol: "kg·m²"          },
+      { id: "mi_kgcm2",  label: "kg·cm²",           symbol: "kg·cm²"         },
+      { id: "mi_gcm2",   label: "g·cm²",            symbol: "g·cm²"          },
+      { id: "mi_lbft2",  label: "lb·ft²",           symbol: "lb·ft²"         },
+      { id: "mi_lbin2",  label: "lb·in²",           symbol: "lb·in²"         },
+      { id: "mi_ozin2",  label: "oz·in²",           symbol: "oz·in²"         },
+      { id: "mi_slugft2",label: "slug·ft²",          symbol: "slug·ft²"       },
+    ],
+    toBase:   { mi_kgm2:v=>v, mi_kgcm2:v=>v*0.0001, mi_gcm2:v=>v*1e-7, mi_lbft2:v=>v*0.042140, mi_lbin2:v=>v*0.00029264, mi_ozin2:v=>v*0.0000182900, mi_slugft2:v=>v*1.35582 },
+    fromBase: { mi_kgm2:v=>v, mi_kgcm2:v=>v/0.0001, mi_gcm2:v=>v/1e-7, mi_lbft2:v=>v/0.042140, mi_lbin2:v=>v/0.00029264, mi_ozin2:v=>v/0.0000182900, mi_slugft2:v=>v/1.35582 },
+  },
+  // ── SPECIFIC VOLUME ──
+  {
+    id: "specificVol", label: "Měrný objem", icon: "🫙", group: "Fyzika",
+    units: [
+      { id: "sv_m3kg",   label: "m³/kg",            symbol: "m³/kg"          },
+      { id: "sv_lkg",    label: "l/kg",             symbol: "l/kg"           },
+      { id: "sv_cm3g",   label: "cm³/g",            symbol: "cm³/g"          },
+      { id: "sv_mlg",    label: "ml/g",             symbol: "ml/g"           },
+      { id: "sv_ft3lb",  label: "ft³/lb",           symbol: "ft³/lb"         },
+      { id: "sv_in3lb",  label: "in³/lb",           symbol: "in³/lb"         },
+      { id: "sv_gal_lb", label: "gal/lb (US)",      symbol: "gal/lb"         },
+    ],
+    toBase:   { sv_m3kg:v=>v, sv_lkg:v=>v*0.001, sv_cm3g:v=>v*0.001, sv_mlg:v=>v*0.001, sv_ft3lb:v=>v*0.062428, sv_in3lb:v=>v*0.000036127, sv_gal_lb:v=>v*0.008345 },
+    fromBase: { sv_m3kg:v=>v, sv_lkg:v=>v/0.001, sv_cm3g:v=>v/0.001, sv_mlg:v=>v/0.001, sv_ft3lb:v=>v/0.062428, sv_in3lb:v=>v/0.000036127, sv_gal_lb:v=>v/0.008345 },
+  },
+  // ── SURFACE TENSION ──
+  {
+    id: "surfaceTension", label: "Povrchové napětí", icon: "💧", group: "Fyzika",
+    units: [
+      { id: "st_nm",     label: "N/m",              symbol: "N/m"            },
+      { id: "st_mnm",    label: "mN/m",             symbol: "mN/m"           },
+      { id: "st_dyncm",  label: "dyn/cm",           symbol: "dyn/cm"         },
+      { id: "st_ergcm2", label: "erg/cm²",          symbol: "erg/cm²"        },
+      { id: "st_lbfft",  label: "lbf/ft",           symbol: "lbf/ft"         },
+      { id: "st_lbfin",  label: "lbf/in",           symbol: "lbf/in"         },
+      { id: "st_pnm",    label: "pN/m",             symbol: "pN/m"           },
+    ],
+    toBase:   { st_nm:v=>v, st_mnm:v=>v*0.001, st_dyncm:v=>v*0.001, st_ergcm2:v=>v*0.001, st_lbfft:v=>v*14.5939, st_lbfin:v=>v*175.127, st_pnm:v=>v*1e-12 },
+    fromBase: { st_nm:v=>v, st_mnm:v=>v/0.001, st_dyncm:v=>v/0.001, st_ergcm2:v=>v/0.001, st_lbfft:v=>v/14.5939, st_lbfin:v=>v/175.127, st_pnm:v=>v/1e-12 },
+  },
+  // ── ANGULAR VELOCITY ──
+  {
+    id: "angularVel", label: "Úhlová rychlost", icon: "🔄", group: "Fyzika",
+    units: [
+      { id: "av_rads",   label: "rad/s",            symbol: "rad/s"          },
+      { id: "av_degs",   label: "°/s",              symbol: "°/s"            },
+      { id: "av_rpm",    label: "ot./min (RPM)",    symbol: "RPM"            },
+      { id: "av_rps",    label: "ot./s (RPS)",      symbol: "RPS"            },
+      { id: "av_grads",  label: "grad/s",           symbol: "grad/s"         },
+      { id: "av_mrad_s", label: "mrad/s",           symbol: "mrad/s"         },
+      { id: "av_revmin", label: "rev/min",          symbol: "rev/min"        },
+    ],
+    toBase:   { av_rads:v=>v, av_degs:v=>v*Math.PI/180, av_rpm:v=>v*Math.PI/30, av_rps:v=>v*2*Math.PI, av_grads:v=>v*Math.PI/200, av_mrad_s:v=>v*0.001, av_revmin:v=>v*Math.PI/30 },
+    fromBase: { av_rads:v=>v, av_degs:v=>v*180/Math.PI, av_rpm:v=>v*30/Math.PI, av_rps:v=>v/(2*Math.PI), av_grads:v=>v*200/Math.PI, av_mrad_s:v=>v/0.001, av_revmin:v=>v*30/Math.PI },
+  },
+  // ── ANGULAR ACCELERATION ──
+  {
+    id: "angularAcc", label: "Úhlové zrychlení", icon: "🌪️", group: "Fyzika",
+    units: [
+      { id: "aa_rads2",  label: "rad/s²",           symbol: "rad/s²"         },
+      { id: "aa_degs2",  label: "°/s²",             symbol: "°/s²"           },
+      { id: "aa_rpms",   label: "RPM/s",            symbol: "RPM/s"          },
+      { id: "aa_rpmmin", label: "RPM/min",          symbol: "RPM/min"        },
+      { id: "aa_grads2", label: "grad/s²",          symbol: "grad/s²"        },
+    ],
+    toBase:   { aa_rads2:v=>v, aa_degs2:v=>v*Math.PI/180, aa_rpms:v=>v*Math.PI/30, aa_rpmmin:v=>v*Math.PI/1800, aa_grads2:v=>v*Math.PI/200 },
+    fromBase: { aa_rads2:v=>v, aa_degs2:v=>v*180/Math.PI, aa_rpms:v=>v*30/Math.PI, aa_rpmmin:v=>v*1800/Math.PI, aa_grads2:v=>v*200/Math.PI },
+  },
+  // ── ELECTRIC CONDUCTANCE ──
+  {
+    id: "elConductance", label: "El. vodivost", icon: "🔗", group: "Elektřina",
+    units: [
+      { id: "ec_s",      label: "Siemens",          symbol: "S"              },
+      { id: "ec_ms",     label: "Millisiemens",     symbol: "mS"             },
+      { id: "ec_us",     label: "Mikrosiemens",     symbol: "μS"             },
+      { id: "ec_ns",     label: "Nanosiemens",      symbol: "nS"             },
+      { id: "ec_ks",     label: "Kilosiemens",      symbol: "kS"             },
+      { id: "ec_mho",    label: "Mho",              symbol: "℧"              },
+      { id: "ec_mmho",   label: "Millimho",         symbol: "m℧"             },
+    ],
+    toBase:   { ec_s:v=>v, ec_ms:v=>v*0.001, ec_us:v=>v*1e-6, ec_ns:v=>v*1e-9, ec_ks:v=>v*1000, ec_mho:v=>v, ec_mmho:v=>v*0.001 },
+    fromBase: { ec_s:v=>v, ec_ms:v=>v/0.001, ec_us:v=>v/1e-6, ec_ns:v=>v/1e-9, ec_ks:v=>v/1000, ec_mho:v=>v, ec_mmho:v=>v/0.001 },
+  },
+  // ── ELECTRIC FIELD STRENGTH ──
+  {
+    id: "elFieldStrength", label: "El. intenzita pole", icon: "⚡", group: "Elektřina",
+    units: [
+      { id: "ef_vm",     label: "V/m",              symbol: "V/m"            },
+      { id: "ef_kvm",    label: "kV/m",             symbol: "kV/m"           },
+      { id: "ef_mvm",    label: "MV/m",             symbol: "MV/m"           },
+      { id: "ef_mvpm",   label: "mV/m",             symbol: "mV/m"           },
+      { id: "ef_vcm",    label: "V/cm",             symbol: "V/cm"           },
+      { id: "ef_vmm",    label: "V/mm",             symbol: "V/mm"           },
+      { id: "ef_vft",    label: "V/ft",             symbol: "V/ft"           },
+      { id: "ef_vmi",    label: "V/mil",            symbol: "V/mil"          },
+    ],
+    toBase:   { ef_vm:v=>v, ef_kvm:v=>v*1000, ef_mvm:v=>v*1e6, ef_mvpm:v=>v*0.001, ef_vcm:v=>v*100, ef_vmm:v=>v*1000, ef_vft:v=>v*3.28084, ef_vmi:v=>v*39370.1 },
+    fromBase: { ef_vm:v=>v, ef_kvm:v=>v/1000, ef_mvm:v=>v/1e6, ef_mvpm:v=>v/0.001, ef_vcm:v=>v/100, ef_vmm:v=>v/1000, ef_vft:v=>v/3.28084, ef_vmi:v=>v/39370.1 },
+  },
+  // ── MAGNETIC FLUX ──
+  {
+    id: "magFlux", label: "Magnetický tok", icon: "🧲", group: "Elektřina",
+    units: [
+      { id: "mf2_wb",    label: "Weber",            symbol: "Wb"             },
+      { id: "mf2_mwb",   label: "Miliweber",        symbol: "mWb"            },
+      { id: "mf2_uwb",   label: "Mikroweber",       symbol: "μWb"            },
+      { id: "mf2_kwb",   label: "Kiloweber",        symbol: "kWb"            },
+      { id: "mf2_mx",    label: "Maxwell",          symbol: "Mx"             },
+      { id: "mf2_vs",    label: "V·s",              symbol: "V·s"            },
+      { id: "mf2_tmm2",  label: "T·m²",            symbol: "T·m²"           },
+    ],
+    toBase:   { mf2_wb:v=>v, mf2_mwb:v=>v*0.001, mf2_uwb:v=>v*1e-6, mf2_kwb:v=>v*1000, mf2_mx:v=>v*1e-8, mf2_vs:v=>v, mf2_tmm2:v=>v },
+    fromBase: { mf2_wb:v=>v, mf2_mwb:v=>v/0.001, mf2_uwb:v=>v/1e-6, mf2_kwb:v=>v/1000, mf2_mx:v=>v/1e-8, mf2_vs:v=>v, mf2_tmm2:v=>v },
+  },
+  // ── MAGNETIC FIELD STRENGTH ──
+  {
+    id: "magFieldH", label: "Magnetická intenzita H", icon: "🔮", group: "Elektřina",
+    units: [
+      { id: "mh_apm",    label: "A/m",              symbol: "A/m"            },
+      { id: "mh_kapm",   label: "kA/m",             symbol: "kA/m"           },
+      { id: "mh_mapm",   label: "mA/m",             symbol: "mA/m"           },
+      { id: "mh_oe",     label: "Oersted",          symbol: "Oe"             },
+      { id: "mh_acm",    label: "A/cm",             symbol: "A/cm"           },
+      { id: "mh_atm",    label: "A·závit/m",        symbol: "At/m"           },
+    ],
+    toBase:   { mh_apm:v=>v, mh_kapm:v=>v*1000, mh_mapm:v=>v*0.001, mh_oe:v=>v*79.5775, mh_acm:v=>v*100, mh_atm:v=>v },
+    fromBase: { mh_apm:v=>v, mh_kapm:v=>v/1000, mh_mapm:v=>v/0.001, mh_oe:v=>v/79.5775, mh_acm:v=>v/100, mh_atm:v=>v },
+  },
+  // ── RESISTIVITY ──
+  {
+    id: "resistivity", label: "Měrný el. odpor", icon: "〰️", group: "Elektřina",
+    units: [
+      { id: "rho_ohm_m", label: "Ω·m",             symbol: "Ω·m"            },
+      { id: "rho_ohm_cm",label: "Ω·cm",            symbol: "Ω·cm"           },
+      { id: "rho_mohm_m",label: "mΩ·m",            symbol: "mΩ·m"           },
+      { id: "rho_uohm_m",label: "μΩ·m",            symbol: "μΩ·m"           },
+      { id: "rho_nohm_m",label: "nΩ·m",            symbol: "nΩ·m"           },
+      { id: "rho_ohm_mm2",label: "Ω·mm²/m",        symbol: "Ω·mm²/m"        },
+      { id: "rho_ohm_ft", label: "Ω·ft",           symbol: "Ω·ft"           },
+    ],
+    toBase:   { rho_ohm_m:v=>v, rho_ohm_cm:v=>v*0.01, rho_mohm_m:v=>v*0.001, rho_uohm_m:v=>v*1e-6, rho_nohm_m:v=>v*1e-9, rho_ohm_mm2:v=>v*1e-6, rho_ohm_ft:v=>v*0.3048 },
+    fromBase: { rho_ohm_m:v=>v, rho_ohm_cm:v=>v/0.01, rho_mohm_m:v=>v/0.001, rho_uohm_m:v=>v/1e-6, rho_nohm_m:v=>v/1e-9, rho_ohm_mm2:v=>v/1e-6, rho_ohm_ft:v=>v/0.3048 },
+  },
+  // ── OPTICAL POWER (DIOPTER) ──
+  {
+    id: "opticalPower", label: "Optická mohutnost", icon: "👓", group: "Fyzika",
+    units: [
+      { id: "op_d",      label: "Dioptrie (D)",     symbol: "D"              },
+      { id: "op_m1",     label: "m⁻¹",              symbol: "m⁻¹"            },
+      { id: "op_cm1",    label: "cm⁻¹",             symbol: "cm⁻¹"           },
+      { id: "op_mm1",    label: "mm⁻¹",             symbol: "mm⁻¹"           },
+      { id: "op_in1",    label: "in⁻¹",             symbol: "in⁻¹"           },
+      { id: "op_ft1",    label: "ft⁻¹",             symbol: "ft⁻¹"           },
+    ],
+    toBase:   { op_d:v=>v, op_m1:v=>v, op_cm1:v=>v*100, op_mm1:v=>v*1000, op_in1:v=>v*39.3701, op_ft1:v=>v*3.28084 },
+    fromBase: { op_d:v=>v, op_m1:v=>v, op_cm1:v=>v/100, op_mm1:v=>v/1000, op_in1:v=>v/39.3701, op_ft1:v=>v/3.28084 },
+  },
+  // ── TEXTILE FINENESS ──
+  {
+    id: "textile", label: "Jemnost přízí", icon: "🧵", group: "Textil",
+    units: [
+      { id: "tx_tex",    label: "Tex (g/km)",       symbol: "tex"            },
+      { id: "tx_dtex",   label: "Decitex (g/10km)", symbol: "dtex"           },
+      { id: "tx_mtex",   label: "Millitex",         symbol: "mtex"           },
+      { id: "tx_ktex",   label: "Kilotex",          symbol: "ktex"           },
+      { id: "tx_den",    label: "Denier (g/9km)",   symbol: "den"            },
+      { id: "tx_gm",     label: "g/m",              symbol: "g/m"            },
+    ],
+    toBase:   { tx_tex:v=>v, tx_dtex:v=>v*0.1, tx_mtex:v=>v*0.001, tx_ktex:v=>v*1000, tx_den:v=>v/9, tx_gm:v=>v*1000 },
+    fromBase: { tx_tex:v=>v, tx_dtex:v=>v/0.1, tx_mtex:v=>v/0.001, tx_ktex:v=>v/1000, tx_den:v=>v*9, tx_gm:v=>v/1000 },
+  },
+  // ── THERMAL DIFFUSIVITY ──
+  {
+    id: "thermalDiff", label: "Tepelná difuzivita", icon: "🌊", group: "Teplo",
+    units: [
+      { id: "td_m2s",    label: "m²/s",             symbol: "m²/s"           },
+      { id: "td_cm2s",   label: "cm²/s",            symbol: "cm²/s"          },
+      { id: "td_mm2s",   label: "mm²/s",            symbol: "mm²/s"          },
+      { id: "td_ft2s",   label: "ft²/s",            symbol: "ft²/s"          },
+      { id: "td_ft2h",   label: "ft²/h",            symbol: "ft²/h"          },
+      { id: "td_in2s",   label: "in²/s",            symbol: "in²/s"          },
+    ],
+    toBase:   { td_m2s:v=>v, td_cm2s:v=>v*1e-4, td_mm2s:v=>v*1e-6, td_ft2s:v=>v*0.0929030, td_ft2h:v=>v*0.0929030/3600, td_in2s:v=>v*0.00064516 },
+    fromBase: { td_m2s:v=>v, td_cm2s:v=>v/1e-4, td_mm2s:v=>v/1e-6, td_ft2s:v=>v/0.0929030, td_ft2h:v=>v*3600/0.0929030, td_in2s:v=>v/0.00064516 },
+  },
+  // ── PERMEABILITY (MAGNETIC) ──
+  {
+    id: "magPermeability", label: "Magnetická permeabilita", icon: "🌀", group: "Elektřina",
+    units: [
+      { id: "mp_hm",     label: "H/m",              symbol: "H/m"            },
+      { id: "mp_mhm",    label: "mH/m",             symbol: "mH/m"           },
+      { id: "mp_uhm",    label: "μH/m",             symbol: "μH/m"           },
+      { id: "mp_nhm",    label: "nH/m",             symbol: "nH/m"           },
+      { id: "mp_pico",   label: "pH/m",             symbol: "pH/m"           },
+      { id: "mp_thm",    label: "T·m/A",            symbol: "T·m/A"          },
+    ],
+    toBase:   { mp_hm:v=>v, mp_mhm:v=>v*0.001, mp_uhm:v=>v*1e-6, mp_nhm:v=>v*1e-9, mp_pico:v=>v*1e-12, mp_thm:v=>v },
+    fromBase: { mp_hm:v=>v, mp_mhm:v=>v/0.001, mp_uhm:v=>v/1e-6, mp_nhm:v=>v/1e-9, mp_pico:v=>v/1e-12, mp_thm:v=>v },
+  },
+  // ── ELECTRIC PERMITTIVITY ──
+  {
+    id: "permittivity", label: "Elektrická permitivita", icon: "🔵", group: "Elektřina",
+    units: [
+      { id: "pe_fm",     label: "F/m",              symbol: "F/m"            },
+      { id: "pe_mfm",    label: "mF/m",             symbol: "mF/m"           },
+      { id: "pe_ufm",    label: "μF/m",             symbol: "μF/m"           },
+      { id: "pe_nfm",    label: "nF/m",             symbol: "nF/m"           },
+      { id: "pe_pfm",    label: "pF/m",             symbol: "pF/m"           },
+    ],
+    toBase:   { pe_fm:v=>v, pe_mfm:v=>v*0.001, pe_ufm:v=>v*1e-6, pe_nfm:v=>v*1e-9, pe_pfm:v=>v*1e-12 },
+    fromBase: { pe_fm:v=>v, pe_mfm:v=>v/0.001, pe_ufm:v=>v/1e-6, pe_nfm:v=>v/1e-9, pe_pfm:v=>v/1e-12 },
+  },
+];
+
+const GROUPS = ["Základní","Fyzika","Elektřina","Geometrie","Digitální","Doprava","Světlo","Záření","Chemie","Teplo","Stavebnictví","Textil"];
+
+function formatNumber(n) {
+  if (n===null||n===undefined||isNaN(n)||!isFinite(n)) return "—";
+  if (n===0) return "0";
+  const abs = Math.abs(n);
+  if (abs>=1e15||(abs<1e-6&&abs>0)) return n.toExponential(6).replace(/\.?0+e/,"e");
+  if (abs>=1000) return n.toLocaleString("cs-CZ",{maximumFractionDigits:6});
+  return parseFloat(n.toPrecision(10)).toString();
+}
+
+
+const GROUP_COLORS = {
+  "Základní":    "#4a9eff",
+  "Fyzika":      "#e8521a",
+  "Elektřina":   "#f0c040",
+  "Geometrie":   "#a78bfa",
+  "Digitální":   "#34d399",
+  "Doprava":     "#f87171",
+  "Světlo":      "#fbbf24",
+  "Záření":      "#fb923c",
+  "Chemie":      "#60a5fa",
+  "Teplo":       "#f97316",
+  "Stavebnictví":"#94a3b8",
+  "Textil":      "#e879f9",
+};
+
+function UnitConverter() {
+  // ── Single atomic state ──
+  const [st, setSt] = useState(() => {
+    try {
+      if (!window.location.hash) throw new Error("no hash");
+      const p = new URLSearchParams(window.location.hash.slice(1));
+      const catId = p.get("c") || CATEGORIES[0].id;
+      const cat0 = CATEGORIES.find(c => c.id === catId) || CATEGORIES[0];
+      return {
+        catId,
+        fromId: p.get("f") || cat0.units[0].id,
+        toId:   p.get("t") || (cat0.units[1] || cat0.units[0]).id,
+        input:  p.get("v") || "1",
+      };
+    } catch { return { catId: CATEGORIES[0].id, fromId: CATEGORIES[0].units[0].id, toId: CATEGORIES[0].units[1].id, input: "1" }; }
+  });
+  const [darkMode, setDarkMode] = useState(() => {
+    try { return localStorage.getItem("uc_dark") !== "false"; } catch { return true; }
+  });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const [globalSearch, setGlobalSearch] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [favorites, setFavorites] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("uc_favs") || "[]"); } catch { return []; }
+  });
+  const [history, setHistory] = useState([]);
+  const [copied, setCopied] = useState(false);
+  const [columns, setColumns] = useState(2);
+  const [editingResult, setEditingResult] = useState(false);
+  const [editVal, setEditVal] = useState("");
+  const [showHistory, setShowHistory] = useState(false);
+  const [showFavs, setShowFavs] = useState(false);
+  const resultRef = useRef(null);
+  const inputRef = useRef(null);
+
+  // Always derive from same atomic state snapshot
+  const cat  = CATEGORIES.find(c => c.id === st.catId) ?? CATEGORIES[0];
+  const from = cat.units.find(u => u.id === st.fromId) ?? cat.units[0];
+  const to   = cat.units.find(u => u.id === st.toId) ?? cat.units.find(u => u.id !== from.id) ?? cat.units[0];
+
+  const doConvert = (val, f, t, c) => {
+    const n = parseFloat(val);
+    if (!f || !t || !c || isNaN(n)) return "";
+    try {
+      const a = c.toBase[f.id];
+      const b = c.fromBase[t.id];
+      if (typeof a !== "function" || typeof b !== "function") return "—";
+      return formatNumber(b(a(n)));
+    } catch { return "—"; }
+  };
+
+  const result = doConvert(st.input, from, to, cat);
+
+  const switchCat = (c) => {
+    setSt({ catId: c.id, fromId: c.units[0].id, toId: (c.units[1] ?? c.units[0]).id, input: "1" });
+    setSearch(""); setSidebarOpen(false);
+  };
+
+  const swapUnits = () => setSt(s => ({
+    ...s,
+    fromId: s.toId, toId: s.fromId,
+    input: result && result !== "—" ? result : s.input,
+  }));
+
+  const grouped = useMemo(() =>
+    GROUPS.map(g => ({ group: g, cats: CATEGORIES.filter(c => c.group === g) }))
+          .filter(g => g.cats.length > 0), []);
+
+  const filteredUnits = search
+    ? cat.units.filter(u => u.label.toLowerCase().includes(search.toLowerCase()) || u.symbol.toLowerCase().includes(search.toLowerCase()))
+    : cat.units;
+
+  const totalUnits = CATEGORIES.reduce((a, c) => a + c.units.length, 0);
+
+  const globalResults = useMemo(() => {
+    const q = globalSearch.trim().toLowerCase();
+    if (q.length < 2) return [];
+    const out = [];
+    for (const c of CATEGORIES)
+      for (const u of c.units)
+        if (c.label.toLowerCase().includes(q) || u.label.toLowerCase().includes(q) || u.symbol.toLowerCase().includes(q))
+          out.push({ c, u });
+    return out.slice(0, 12);
+  }, [globalSearch]);
+
+  const pickGlobal = (c, u) => {
+    setSt({ catId: c.id, fromId: u.id, toId: (c.units.find(x => x.id !== u.id) ?? c.units[0]).id, input: "1" });
+    setGlobalSearch(""); setSearchFocused(false); setSidebarOpen(false);
+  };
+
+
+  // ── URL sync (safe in sandboxed iframes) ──
+  useEffect(() => {
+    try {
+      const h = `#c=${st.catId}&f=${st.fromId}&t=${st.toId}&v=${encodeURIComponent(st.input)}`;
+      window.history.replaceState(null, "", h);
+    } catch {}
+  }, [st]);
+
+  // ── CSS vars + persist dark mode ──
+  useEffect(() => {
+    const DARK = ':root{--bg:#07070e;--surface:#0b0b17;--surface2:#0f0f1c;--surface3:#111120;--active:#121220;--swap-bg:#161626;--border:#1a1a2e;--border2:#222238;--border3:#282840;--ghost:#2a2a42;--group:#2a2a45;--dim:#383858;--faint:#484860;--muted:#686880;--text:#e0dcd5;--opt-bg:#0d0d1a;--accent:#e8521a;}';
+    const LIGHT = ':root{--bg:#f5f5f2;--surface:#ffffff;--surface2:#f0f0ed;--surface3:#e8e8e4;--active:#e2e2f0;--swap-bg:#dcdcee;--border:#d4d4e0;--border2:#c0c0d0;--border3:#b0b0c4;--ghost:#b8b8cc;--group:#9898ac;--dim:#606070;--faint:#505060;--muted:#383848;--text:#1a1a2e;--opt-bg:#ffffff;--accent:#e8521a;}';
+    let el = document.getElementById("uc-vars");
+    if (!el) { el = document.createElement("style"); el.id = "uc-vars"; document.head.appendChild(el); }
+    el.textContent = darkMode ? DARK : LIGHT;
+    document.documentElement.setAttribute("data-theme", darkMode ? "dark" : "light");
+    try { localStorage.setItem("uc_dark", darkMode); } catch {}
+  }, [darkMode]);
+
+  // ── Persist favorites ──
+  useEffect(() => {
+    try { localStorage.setItem("uc_favs", JSON.stringify(favorites)); } catch {}
+  }, [favorites]);
+
+  // ── Add to history on each valid conversion ──
+  useEffect(() => {
+    if (!result || result === "—" || !st.input) return;
+    setHistory(h => {
+      const entry = { catId: st.catId, catLabel: cat.label, catIcon: cat.icon, fromId: st.fromId, toId: st.toId, fromSymbol: from.symbol, toSymbol: to.symbol, input: st.input, result, ts: Date.now() };
+      const filtered = h.filter(e => !(e.fromId === entry.fromId && e.toId === entry.toId && e.catId === entry.catId));
+      return [entry, ...filtered].slice(0, 15);
+    });
+  }, [st.catId, st.fromId, st.toId, result]);
+
+  // ── Keyboard shortcuts ──
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.target.tagName === "INPUT" || e.target.tagName === "SELECT" || e.target.tagName === "TEXTAREA") return;
+      if (e.key === "s" || e.key === "S") { e.preventDefault(); swapUnits(); }
+      if (e.key === "f" || e.key === "F") { e.preventDefault(); inputRef.current?.focus(); }
+      if (e.key === "Escape") { setSidebarOpen(false); setShowHistory(false); setShowFavs(false); }
+      if (e.key === "c" || e.key === "C") { if (result && result !== "—") copyResult(); }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [result]);
+
+  // ── Copy result ──
+  const copyResult = useCallback(() => {
+    if (!result || result === "—") return;
+    try {
+      navigator.clipboard.writeText(`${result} ${to.symbol}`);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {}
+  }, [result, to]);
+
+  // ── Favorites helpers ──
+  const favKey = `${st.catId}|${st.fromId}|${st.toId}`;
+  const isFav = favorites.some(f => f.key === favKey);
+  const toggleFav = () => {
+    if (isFav) {
+      setFavorites(f => f.filter(x => x.key !== favKey));
+    } else {
+      setFavorites(f => [...f, { key: favKey, catId: st.catId, catLabel: cat.label, catIcon: cat.icon, fromId: st.fromId, toId: st.toId, fromSymbol: from.symbol, toSymbol: to.symbol }]);
+    }
+  };
+
+  // ── Share URL ──
+  const shareUrl = () => {
+    try {
+      const url = window.location.href !== "about:srcdoc" ? window.location.href : `${window.location.origin}${window.location.pathname}#c=${st.catId}&f=${st.fromId}&t=${st.toId}&v=${encodeURIComponent(st.input)}`;
+      navigator.clipboard.writeText(url);
+      setCopied("url");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {}
+  };
+
+  // ── Inline result edit ──
+  const startEdit = () => {
+    if (!result || result === "—") return;
+    setEditingResult(true);
+    setEditVal(result.replace(/\s/g, ""));
+    setTimeout(() => resultRef.current?.select(), 30);
+  };
+  const commitEdit = () => {
+    const n = parseFloat(editVal);
+    if (!isNaN(n)) {
+      const base = cat.toBase[to.id](n);
+      const back = cat.fromBase[from.id](base);
+      setSt(s => ({ ...s, input: formatNumber(back) }));
+    }
+    setEditingResult(false);
+  };
+
+  return (
+    <div style={{fontFamily:"'DM Mono','Courier New',monospace",background:"var(--bg)",minHeight:"100vh",color:"var(--text)",display:"flex",flexDirection:"column"}}>
+      <style>{`
+
+        *{box-sizing:border-box;margin:0;padding:0}
+        ::-webkit-scrollbar{width:3px}
+        ::-webkit-scrollbar-track{background:var(--bg)}
+        ::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px}
+        .catbtn{transition:all .13s;cursor:pointer;border:none;text-align:left;width:100%;background:transparent}
+        .catbtn:hover{background:var(--active)!important;color:var(--accent)!important}
+        .unitsel{transition:border-color .13s;cursor:pointer}
+        .unitsel:focus,.inputval:focus{outline:2px solid var(--accent);outline-offset:1px}
+        .swapbtn{transition:all .22s;cursor:pointer}
+        .swapbtn:hover{background:var(--accent)!important;color:var(--bg)!important;transform:rotate(180deg)}
+        .rcard{cursor:pointer;transition:border-color .12s,background .12s}
+        .rcard:hover{border-color:var(--accent)!important;background:var(--surface3)!important}
+        @keyframes fu{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+        .fa{animation:fu .16s ease}
+        .g2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+        @media(max-width:520px){.g2{grid-template-columns:1fr}}
+        .mmb{display:none!important}
+        @media(max-width:800px){
+          .sidebar{position:fixed!important;left:0;top:0;height:100vh;z-index:100;transform:translateX(-100%);transition:transform .26s cubic-bezier(.4,0,.2,1)}
+          .sidebar.open{transform:translateX(0)!important}
+          .mmb{display:flex!important}
+          .mna{margin-left:0!important}
+        }
+        select option{background:var(--opt-bg);color:var(--text)}
+        .sritem:hover{background:var(--active)!important}
+        input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none}
+        input[type=number]{-moz-appearance:textfield}
+        .copy-flash{animation:flash .4s ease}
+        @keyframes flash{0%{opacity:1}50%{opacity:.3}100%{opacity:1}}
+        .favbtn:hover{color:var(--accent)!important}
+        .hitem:hover{background:var(--active)!important;cursor:pointer}
+        .colbtn{transition:all .15s;cursor:pointer;border:none;padding:4px 10px;border-radius:3px;font-family:inherit;font-size:10px}
+        .colbtn.active{background:var(--accent)!important;color:#fff!important}
+        .colbtn:not(.active){background:var(--surface2);color:var(--muted)}
+        .panel{position:fixed;top:50px;right:0;width:320px;max-height:calc(100vh - 60px);overflow-y:auto;background:var(--surface);border-left:1px solid var(--border);z-index:200;box-shadow:-4px 0 20px rgba(0,0,0,.3)}
+        @media(max-width:420px){.panel{width:100vw}}
+        .result-input{background:transparent!important;border:none!important;outline:2px solid var(--accent)!important;color:var(--text)!important;font-family:inherit;font-size:21px;font-weight:500;width:100%;padding:0;min-width:0}
+        .g1{grid-template-columns:1fr!important}
+        .g3{grid-template-columns:1fr 1fr 1fr!important}
+        @keyframes slide-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+        .slide-in{animation:slide-in .2s ease}
+        @media(max-width:520px){.g3{grid-template-columns:1fr 1fr!important}}
+        .kbd{display:inline-block;background:var(--surface2);border:1px solid var(--border2);border-radius:3px;padding:0 5px;font-size:9px;color:var(--muted);margin-left:4px;vertical-align:middle}
+      `}</style>
+
+      {/* HEADER */}
+      <header style={{background:"var(--surface)",borderBottom:"1px solid #1a1a2e",padding:"0 18px",height:50,display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,zIndex:50}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          <button className="mmb swapbtn" onClick={()=>setSidebarOpen(v=>!v)}
+            style={{background:"none",border:"1px solid #282840",color:"var(--text)",width:30,height:30,borderRadius:4,cursor:"pointer",display:"none",alignItems:"center",justifyContent:"center",fontSize:14}}>☰</button>
+          <span style={{fontFamily:"'Unbounded',sans-serif",fontWeight:900,fontSize:16,letterSpacing:"-0.5px"}}>
+            <span style={{color:"var(--accent)"}}>UNIT</span><span>CONV</span>
+          </span>
+        </div>
+
+        {/* GLOBAL SEARCH */}
+        <div style={{position:"relative",flex:1,maxWidth:320,margin:"0 16px"}}>
+          <div style={{position:"relative",display:"flex",alignItems:"center"}}>
+            <span style={{position:"absolute",left:9,color:"var(--faint)",fontSize:13,pointerEvents:"none"}}>🔍</span>
+            <input
+              value={globalSearch}
+              onChange={e=>setGlobalSearch(e.target.value)}
+              onFocus={()=>setSearchFocused(true)}
+              onBlur={()=>setTimeout(()=>setSearchFocused(false),150)}
+              placeholder="Hledat jednotku nebo kategorii..."
+              style={{width:"100%",background:"var(--surface2)",border:`1px solid ${searchFocused?"var(--accent)":"var(--border2)"}`,color:"var(--text)",fontFamily:"inherit",fontSize:12,padding:"6px 9px 6px 30px",borderRadius:4,outline:"none",transition:"border-color .15s"}}
+            />
+            {globalSearch && (
+              <button onClick={()=>setGlobalSearch("")}
+                style={{position:"absolute",right:8,background:"none",border:"none",color:"var(--faint)",cursor:"pointer",fontSize:14,lineHeight:1}}>×</button>
+            )}
+          </div>
+          {/* DROPDOWN */}
+          {searchFocused && globalSearch.length >= 2 && (
+            <div style={{position:"absolute",top:"calc(100% + 4px)",left:0,right:0,background:"var(--surface2)",border:"1px solid #2a2a42",borderRadius:6,zIndex:200,maxHeight:340,overflowY:"auto",boxShadow:"0 8px 32px rgba(0,0,0,.6)"}}>
+              {globalResults.length === 0 ? (
+                <div style={{padding:"12px 14px",fontSize:12,color:"var(--faint)"}}>Nic nenalezeno</div>
+              ) : (
+                <>
+                  <div style={{padding:"6px 12px 4px",fontSize:9,color:"var(--dim)",letterSpacing:"0.14em",textTransform:"uppercase",borderBottom:"1px solid #1a1a2e"}}>
+                    {globalResults.length} výsledků
+                  </div>
+                  {globalResults.map(({c,u},i)=>(
+                    <div key={i} onClick={()=>pickGlobal(c,u)}
+                      className="sritem"
+                      style={{padding:"8px 12px",cursor:"pointer",borderBottom:"1px solid #13131f",display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
+                      <div style={{display:"flex",alignItems:"center",gap:8,minWidth:0}}>
+                        <span style={{fontSize:14,flexShrink:0}}>{c.icon}</span>
+                        <div style={{minWidth:0}}>
+                          <div style={{fontSize:12,color:"var(--text)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.label}</div>
+                          <div style={{fontSize:10,color:"var(--faint)"}}>{c.label}</div>
+                        </div>
+                      </div>
+                      <span style={{fontSize:11,color:"var(--accent)",flexShrink:0,fontWeight:500}}>{u.symbol}</span>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+          {searchFocused && globalSearch.length === 1 && (
+            <div style={{position:"absolute",top:"calc(100% + 4px)",left:0,right:0,background:"var(--surface2)",border:"1px solid #2a2a42",borderRadius:6,zIndex:200,padding:"10px 14px",fontSize:11,color:"var(--faint)",boxShadow:"0 8px 32px rgba(0,0,0,.6)"}}>
+              Zadejte alespoň 2 znaky...
+            </div>
+          )}
+        </div>
+
+        <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
+          <button onClick={()=>{setShowFavs(v=>!v);setShowHistory(false);}} title="Oblíbené [F]"
+            style={{background:showFavs?"var(--accent)":"var(--surface2)",border:"1px solid var(--border2)",color:showFavs?"#fff":"var(--text)",width:32,height:32,borderRadius:4,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,transition:"all .2s"}}>⭐</button>
+          <button onClick={()=>{setShowHistory(v=>!v);setShowFavs(false);}} title="Historie"
+            style={{background:showHistory?"var(--accent)":"var(--surface2)",border:"1px solid var(--border2)",color:showHistory?"#fff":"var(--text)",width:32,height:32,borderRadius:4,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,transition:"all .2s"}}>🕐</button>
+          <button onClick={shareUrl} title="Sdílet URL"
+            style={{background:copied==="url"?"var(--accent)":"var(--surface2)",border:"1px solid var(--border2)",color:copied==="url"?"#fff":"var(--text)",width:32,height:32,borderRadius:4,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,transition:"all .2s"}}>
+            {copied==="url"?"✓":"🔗"}
+          </button>
+          <button onClick={()=>setDarkMode(d=>!d)} title={darkMode?"Světlý režim":"Tmavý režim"}
+            style={{background:"var(--surface2)",border:"1px solid var(--border2)",color:"var(--text)",width:32,height:32,borderRadius:4,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,transition:"all .2s"}}>
+            {darkMode ? "☀️" : "🌙"}
+          </button>
+          <span style={{fontSize:10,color:"var(--dim)",letterSpacing:"0.1em",textTransform:"uppercase",whiteSpace:"nowrap",display:"none"}} className="hd-count">
+            {CATEGORIES.length}k·{totalUnits}j
+          </span>
+        </div>
+      </header>
+
+
+      {/* ── HISTORY PANEL ── */}
+      {showHistory && (
+        <div className="panel slide-in">
+          <div style={{padding:"12px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <span style={{fontSize:12,fontWeight:500,color:"var(--text)"}}>🕐 Historie převodů</span>
+            <button onClick={()=>setShowHistory(false)} style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",fontSize:18,lineHeight:1}}>×</button>
+          </div>
+          {history.length === 0 ? (
+            <div style={{padding:16,fontSize:12,color:"var(--dim)"}}>Zatím žádné převody.</div>
+          ) : history.map((h,i) => (
+            <div key={i} className="hitem" onClick={()=>{
+              const c = CATEGORIES.find(x=>x.id===h.catId);
+              if(c) { setSt({catId:h.catId,fromId:h.fromId,toId:h.toId,input:h.input}); setShowHistory(false); }
+            }} style={{padding:"9px 16px",borderBottom:"1px solid var(--border)",display:"flex",flexDirection:"column",gap:2}}>
+              <div style={{fontSize:9,color:"var(--dim)",letterSpacing:"0.1em",textTransform:"uppercase"}}>{h.catIcon} {h.catLabel}</div>
+              <div style={{fontSize:12,color:"var(--text)"}}><span style={{color:"var(--accent)"}}>{h.input} {h.fromSymbol}</span> = <span style={{fontWeight:500}}>{h.result} {h.toSymbol}</span></div>
+            </div>
+          ))}
+          {history.length > 0 && <div style={{padding:"8px 16px"}}><button onClick={()=>setHistory([])} style={{background:"none",border:"1px solid var(--border2)",color:"var(--dim)",cursor:"pointer",borderRadius:3,padding:"4px 10px",fontSize:10,fontFamily:"inherit",width:"100%"}}>Vymazat historii</button></div>}
+        </div>
+      )}
+
+      {/* ── FAVORITES PANEL ── */}
+      {showFavs && (
+        <div className="panel slide-in">
+          <div style={{padding:"12px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <span style={{fontSize:12,fontWeight:500,color:"var(--text)"}}>⭐ Oblíbené</span>
+            <button onClick={()=>setShowFavs(false)} style={{background:"none",border:"none",color:"var(--muted)",cursor:"pointer",fontSize:18,lineHeight:1}}>×</button>
+          </div>
+          {favorites.length === 0 ? (
+            <div style={{padding:16,fontSize:12,color:"var(--dim)"}}>Žádné oblíbené. Klikni na ⭐ u převodníku.</div>
+          ) : favorites.map((fav,i) => (
+            <div key={i} className="hitem" onClick={()=>{
+              setSt({catId:fav.catId,fromId:fav.fromId,toId:fav.toId,input:"1"});
+              setShowFavs(false);
+            }} style={{padding:"9px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
+              <div style={{minWidth:0}}>
+                <div style={{fontSize:9,color:"var(--dim)",textTransform:"uppercase",letterSpacing:"0.1em"}}>{fav.catIcon} {fav.catLabel}</div>
+                <div style={{fontSize:12,color:"var(--text)"}}>{fav.fromSymbol} → {fav.toSymbol}</div>
+              </div>
+              <button onClick={e=>{e.stopPropagation();setFavorites(f=>f.filter((_,j)=>j!==i));}}
+                style={{background:"none",border:"none",color:"var(--dim)",cursor:"pointer",fontSize:16,flexShrink:0}}>×</button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div style={{display:"flex",flex:1}}>
+        {sidebarOpen && <div onClick={()=>setSidebarOpen(false)} style={{position:"fixed",inset:0,background:"rgba(0,0,0,.8)",zIndex:99}}/>}
+
+        {/* SIDEBAR */}
+        <aside className={`sidebar${sidebarOpen?" open":""}`}
+          style={{width:225,background:"var(--surface)",borderRight:"1px solid #1a1a2e",flexShrink:0,overflowY:"auto",paddingBottom:20}}>
+          <div style={{padding:"10px 14px 6px",fontSize:9,color:"var(--dim)",letterSpacing:"0.14em",textTransform:"uppercase"}}>Kategorie</div>
+          {grouped.map(({group,cats})=>(
+            <div key={group}>
+              <div style={{padding:"7px 14px 3px",fontSize:9,color:"var(--group)",letterSpacing:"0.16em",textTransform:"uppercase",borderTop:"1px solid #1a1a2e",marginTop:4}}>{group}</div>
+              {cats.map(cat=>(
+                <button key={cat.id} className="catbtn" onClick={()=>switchCat(cat)}
+                  style={{padding:"7px 14px",background:st.catId===cat.id?"var(--active)":"transparent",color:st.catId===cat.id?"var(--accent)":"var(--muted)",borderLeft:st.catId===cat.id?"2px solid #e8521a":"2px solid transparent",fontFamily:"inherit",fontSize:12,display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{fontSize:13}}>{cat.icon}</span>{cat.label}
+                </button>
+              ))}
+            </div>
+          ))}
+        </aside>
+
+        {/* MAIN */}
+        <main key={st.catId} className="mna" style={{flex:1,padding:"24px 18px",maxWidth:860,overflowX:"hidden"}}>
+          <div style={{marginBottom:20,display:"flex",alignItems:"center",gap:10}}>
+            <span style={{fontSize:24}}>{cat.icon}</span>
+            <div>
+              <h1 style={{fontFamily:"'Unbounded',sans-serif",fontWeight:700,fontSize:18,letterSpacing:"-0.5px"}}>{cat.label}</h1>
+              <p style={{color:"var(--dim)",fontSize:10,marginTop:1}}>{cat.units.length} jednotek</p>
+            </div>
+          </div>
+
+          {/* CONVERTER */}
+          <div style={{background:"var(--surface)",border:"1px solid #1a1a2e",borderRadius:8,padding:18,marginBottom:18}}>
+            <label style={{fontSize:9,color:"var(--dim)",letterSpacing:"0.15em",textTransform:"uppercase",display:"block",marginBottom:4}}>Z jednotky</label>
+            <div style={{display:"flex",gap:7,marginBottom:12}}>
+              <select className="unitsel" value={from.id}
+                onChange={e=>setSt(s=>({...s,fromId:e.target.value}))}
+                style={{background:"var(--surface2)",border:"1px solid #222238",color:"var(--text)",fontFamily:"inherit",fontSize:12,padding:"8px 9px",borderRadius:4,flex:"0 0 185px",cursor:"pointer"}}>
+                {cat.units.map(u=><option key={u.id} value={u.id}>{u.label} ({u.symbol})</option>)}
+              </select>
+              <input className="inputval" type="number" inputMode="decimal" value={st.input} onChange={e=>setSt(s=>({...s,input:e.target.value}))}
+                style={{flex:1,background:"var(--surface2)",border:"1px solid #222238",color:"var(--accent)",fontFamily:"inherit",fontSize:21,fontWeight:500,padding:"8px 13px",borderRadius:4,minWidth:0,outline:"none"}} placeholder="0"/>
+            </div>
+
+            <div style={{display:"flex",alignItems:"center",marginBottom:12}}>
+              <div style={{flex:1,height:1,background:"var(--border)"}}/>
+              <button className="swapbtn" onClick={swapUnits}
+                style={{background:"var(--swap-bg)",border:"1px solid #222238",color:"var(--text)",width:32,height:32,borderRadius:"50%",fontSize:14,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 11px"}}>⇅</button>
+              <div style={{flex:1,height:1,background:"var(--border)"}}/>
+            </div>
+
+            <label style={{fontSize:9,color:"var(--dim)",letterSpacing:"0.15em",textTransform:"uppercase",display:"block",marginBottom:4}}>Na jednotku</label>
+            <div style={{display:"flex",gap:7,marginBottom:12}}>
+              <select className="unitsel" value={to.id}
+                onChange={e=>setSt(s=>({...s,toId:e.target.value}))}
+                style={{background:"var(--surface2)",border:"1px solid #222238",color:"var(--text)",fontFamily:"inherit",fontSize:12,padding:"8px 9px",borderRadius:4,flex:"0 0 185px",cursor:"pointer"}}>
+                {cat.units.map(u=><option key={u.id} value={u.id}>{u.label} ({u.symbol})</option>)}
+              </select>
+              <div className="fa" key={result}
+                style={{flex:1,background:"var(--surface3)",border:"1px solid #222238",color:result&&result!=="—"?"var(--text)":"var(--ghost)",fontSize:21,fontWeight:500,padding:"8px 13px",borderRadius:4,display:"flex",alignItems:"center",minWidth:0,overflow:"hidden",whiteSpace:"nowrap",textOverflow:"ellipsis"}}>
+                {result||"—"}
+              </div>
+            </div>
+
+            {result&&result!=="—"&&!isNaN(parseFloat(st.input))&&(
+              <div style={{padding:"7px 11px",background:"var(--surface2)",borderRadius:4,border:"1px solid #1a1a2e",fontSize:11,color:"var(--faint)"}}>
+                <span style={{color:"var(--accent)"}}>{st.input} {from.symbol}</span>{" = "}
+                <span style={{color:"var(--text)"}}>{result} {to.symbol}</span>
+              </div>
+            )}
+          </div>
+
+          {/* KEYBOARD HINTS */}
+          <div style={{fontSize:9,color:"var(--dim)",marginBottom:16,display:"flex",gap:12,flexWrap:"wrap"}}>
+            <span><kbd className="kbd">S</kbd> swap</span>
+            <span><kbd className="kbd">F</kbd> focus input</span>
+            <span><kbd className="kbd">C</kbd> kopírovat</span>
+            <span><kbd className="kbd">Esc</kbd> zavřít panel</span>
+            <span style={{color:"var(--dim)",marginLeft:"auto",cursor:"pointer"}} onClick={startEdit} title="Klikni na výsledek pro zpětný převod">← klikni na výsledek pro zpětný převod</span>
+          </div>
+
+          {/* ALL */}
+          {st.input&&!isNaN(parseFloat(st.input))&&(
+            <div>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+                <div style={{fontSize:9,color:"var(--dim)",letterSpacing:"0.15em",textTransform:"uppercase"}}>
+                  Všechny převody z {from.symbol}
+                </div>
+                <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Filtrovat..."
+                  style={{background:"var(--surface2)",border:"1px solid #1a1a2e",color:"var(--text)",fontFamily:"inherit",fontSize:11,padding:"4px 9px",borderRadius:4,width:120,outline:"none"}}/>
+              </div>
+              <div className={`g2${columns===1?" g1":columns===3?" g3":""}`}>
+                {filteredUnits.filter(u=>u.id!==from.id).map(u=>{
+                  const val = doConvert(st.input, from, u, cat);
+                  const active = u.id===st.toId;
+                  return (
+                    <div key={u.id} className="rcard" onClick={()=>setSt(s=>({...s,toId:u.id}))}
+                      style={{background:active?"var(--active)":"var(--surface)",border:`1px solid ${active?"var(--accent)":"var(--border)"}`,borderRadius:4,padding:"9px 13px"}}>
+                      <div style={{fontSize:9,color:"var(--dim)",letterSpacing:"0.09em",marginBottom:2}}>{u.label}</div>
+                      <div style={{fontSize:13,color:"var(--text)",fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>
+                        {val} <span style={{color:"var(--accent)",fontSize:10}}>{u.symbol}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* FOOTER */}
+      <footer style={{borderTop:"1px solid var(--border)",padding:"12px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8,background:"var(--surface)"}}>
+        <span style={{fontSize:10,color:"var(--dim)",letterSpacing:"0.08em"}}>Martin Slanec &middot; 63 kategorii &middot; 560 jednotek</span>
+        <div style={{display:"flex",alignItems:"center",gap:16}}>
+          <a href="mailto:mslanec@gmail.com"
+            style={{fontSize:10,color:"var(--muted)",textDecoration:"none",display:"flex",alignItems:"center",gap:5,transition:"color .15s"}}
+            onMouseEnter={e=>e.currentTarget.style.color="var(--accent)"}
+            onMouseLeave={e=>e.currentTarget.style.color="var(--muted)"}>
+            &#9993; mslanec@gmail.com
+          </a>
+          <a href="https://www.linkedin.com/in/mslanec" target="_blank" rel="noopener noreferrer"
+            style={{fontSize:10,color:"var(--muted)",textDecoration:"none",display:"flex",alignItems:"center",gap:5,transition:"color .15s"}}
+            onMouseEnter={e=>e.currentTarget.style.color="var(--accent)"}
+            onMouseLeave={e=>e.currentTarget.style.color="var(--muted)"}>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            LinkedIn
+          </a>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+const container = document.getElementById('root');
+const root = ReactDOM.createRoot(container);
+root.render(React.createElement(UnitConverter));
+  </script>
+</body>
+</html>
