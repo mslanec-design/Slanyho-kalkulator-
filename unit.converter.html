@@ -12,16 +12,43 @@
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
   <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
-  <style id="uc-vars">
-    :root{--bg:#07070e;--surface:#0b0b17;--surface2:#0f0f1c;--surface3:#111120;--active:#121220;--swap-bg:#161626;--border:#1a1a2e;--border2:#222238;--border3:#282840;--ghost:#2a2a42;--group:#2a2a45;--dim:#383858;--faint:#484860;--muted:#686880;--text:#e0dcd5;--opt-bg:#0d0d1a;--accent:#e8521a;}
-  </style>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'DM Mono', 'Courier New', monospace; }
     #root { min-height: 100vh; }
+
+    /* ── DARK theme (default) ── */
+    :root {
+      --bg:#07070e;--surface:#0b0b17;--surface2:#0f0f1c;--surface3:#111120;
+      --active:#121220;--swap-bg:#161626;--border:#1a1a2e;--border2:#222238;
+      --border3:#282840;--ghost:#2a2a42;--group:#2a2a45;--dim:#383858;
+      --faint:#484860;--muted:#686880;--text:#e0dcd5;--opt-bg:#0d0d1a;
+      --accent:#e8521a;
+    }
+    /* ── LIGHT theme ── */
+    html[data-theme="light"] {
+      --bg:#f5f5f2;--surface:#ffffff;--surface2:#f0f0ed;--surface3:#e8e8e4;
+      --active:#e2e2f0;--swap-bg:#dcdcee;--border:#d4d4e0;--border2:#c0c0d0;
+      --border3:#b0b0c4;--ghost:#b8b8cc;--group:#9898ac;--dim:#606070;
+      --faint:#505060;--muted:#383848;--text:#1a1a2e;--opt-bg:#ffffff;
+      --accent:#e8521a;
+    }
+    /* ── Safety: body & root always get bg color ── */
+    body, #root { background: var(--bg, #07070e); color: var(--text, #e0dcd5); }
   </style>
+  <!-- Instantly apply theme BEFORE React loads — prevents flash and fixes mobile -->
+  <script>
+    (function(){
+      var dark = localStorage.getItem('uc_dark');
+      // default = dark (true). Only go light if explicitly saved as "false"
+      if (dark === 'false') {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+      // else: :root dark vars are already active, nothing to do
+    })();
+  </script>
 </head>
-<body style="background:#07070e">
+<body>
   <div id="root"></div>
   <script>
   (function(){
@@ -1463,15 +1490,10 @@ function UnitConverter() {
     } catch {}
   }, [st]);
 
-  // ── CSS vars + persist dark mode ──
+  // ── Theme switch: sets data-theme on <html>, CSS vars handle the rest ──
   useEffect(() => {
-    const DARK = ':root{--bg:#07070e;--surface:#0b0b17;--surface2:#0f0f1c;--surface3:#111120;--active:#121220;--swap-bg:#161626;--border:#1a1a2e;--border2:#222238;--border3:#282840;--ghost:#2a2a42;--group:#2a2a45;--dim:#383858;--faint:#484860;--muted:#686880;--text:#e0dcd5;--opt-bg:#0d0d1a;--accent:#e8521a;}';
-    const LIGHT = ':root{--bg:#f5f5f2;--surface:#ffffff;--surface2:#f0f0ed;--surface3:#e8e8e4;--active:#e2e2f0;--swap-bg:#dcdcee;--border:#d4d4e0;--border2:#c0c0d0;--border3:#b0b0c4;--ghost:#b8b8cc;--group:#9898ac;--dim:#606070;--faint:#505060;--muted:#383848;--text:#1a1a2e;--opt-bg:#ffffff;--accent:#e8521a;}';
-    let el = document.getElementById("uc-vars");
-    if (!el) { el = document.createElement("style"); el.id = "uc-vars"; document.head.appendChild(el); }
-    el.textContent = darkMode ? DARK : LIGHT;
-    document.documentElement.setAttribute("data-theme", darkMode ? "dark" : "light");
-    try { localStorage.setItem("uc_dark", darkMode); } catch {}
+    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+    try { localStorage.setItem('uc_dark', darkMode); } catch {}
   }, [darkMode]);
 
   // ── Persist favorites ──
@@ -1554,6 +1576,7 @@ function UnitConverter() {
     <div style={{fontFamily:"'DM Mono','Courier New',monospace",background:"var(--bg)",minHeight:"100vh",color:"var(--text)",display:"flex",flexDirection:"column"}}>
       <style>{`
 
+
         *{box-sizing:border-box;margin:0;padding:0}
         ::-webkit-scrollbar{width:3px}
         ::-webkit-scrollbar-track{background:var(--bg)}
@@ -1571,11 +1594,24 @@ function UnitConverter() {
         .g2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
         @media(max-width:520px){.g2{grid-template-columns:1fr}}
         .mmb{display:none!important}
-        @media(max-width:800px){
+        @media(max-width:860px){
           .sidebar{position:fixed!important;left:0;top:0;height:100vh;z-index:100;transform:translateX(-100%);transition:transform .26s cubic-bezier(.4,0,.2,1)}
           .sidebar.open{transform:translateX(0)!important}
           .mmb{display:flex!important}
           .mna{margin-left:0!important}
+        }
+        /* Tablet: hide share button */
+        @media(max-width:600px){
+          .hd-share{display:none!important}
+        }
+        /* Mobile: hide logo text to maximise search width */
+        @media(max-width:420px){
+          .hd-logo{display:none!important}
+          .mna{padding:12px 10px!important}
+        }
+        /* Touch: bigger tap targets in result cards */
+        @media(max-width:860px){
+          .rcard{padding:12px 14px!important}
         }
         select option{background:var(--opt-bg);color:var(--text)}
         .sritem:hover{background:var(--active)!important}
@@ -1597,57 +1633,64 @@ function UnitConverter() {
         .slide-in{animation:slide-in .2s ease}
         @media(max-width:520px){.g3{grid-template-columns:1fr 1fr!important}}
         .kbd{display:inline-block;background:var(--surface2);border:1px solid var(--border2);border-radius:3px;padding:0 5px;font-size:9px;color:var(--muted);margin-left:4px;vertical-align:middle}
+        @media(max-width:860px){.kbd-bar{display:none!important}}
+        select,input{-webkit-tap-highlight-color:transparent}
+        select{font-size:16px!important}
       `}</style>
 
       {/* HEADER */}
-      <header style={{background:"var(--surface)",borderBottom:"1px solid #1a1a2e",padding:"0 18px",height:50,display:"flex",alignItems:"center",justifyContent:"space-between",position:"sticky",top:0,zIndex:50}}>
-        <div style={{display:"flex",alignItems:"center",gap:10}}>
-          <button className="mmb swapbtn" onClick={()=>setSidebarOpen(v=>!v)}
-            style={{background:"none",border:"1px solid #282840",color:"var(--text)",width:30,height:30,borderRadius:4,cursor:"pointer",display:"none",alignItems:"center",justifyContent:"center",fontSize:14}}>☰</button>
-          <span style={{fontFamily:"'Unbounded',sans-serif",fontWeight:900,fontSize:16,letterSpacing:"-0.5px"}}>
-            <span style={{color:"var(--accent)"}}>UNIT</span><span>CONV</span>
-          </span>
-        </div>
+      <header style={{background:"var(--surface)",borderBottom:"1px solid var(--border)",padding:"0 10px",height:52,display:"flex",alignItems:"center",gap:8,position:"sticky",top:0,zIndex:50,minWidth:0}}>
 
-        {/* GLOBAL SEARCH */}
-        <div style={{position:"relative",flex:1,maxWidth:320,margin:"0 16px"}}>
-          <div style={{position:"relative",display:"flex",alignItems:"center"}}>
-            <span style={{position:"absolute",left:9,color:"var(--faint)",fontSize:13,pointerEvents:"none"}}>🔍</span>
-            <input
-              value={globalSearch}
-              onChange={e=>setGlobalSearch(e.target.value)}
-              onFocus={()=>setSearchFocused(true)}
-              onBlur={()=>setTimeout(()=>setSearchFocused(false),150)}
-              placeholder="Hledat jednotku nebo kategorii..."
-              style={{width:"100%",background:"var(--surface2)",border:`1px solid ${searchFocused?"var(--accent)":"var(--border2)"}`,color:"var(--text)",fontFamily:"inherit",fontSize:12,padding:"6px 9px 6px 30px",borderRadius:4,outline:"none",transition:"border-color .15s"}}
-            />
-            {globalSearch && (
-              <button onClick={()=>setGlobalSearch("")}
-                style={{position:"absolute",right:8,background:"none",border:"none",color:"var(--faint)",cursor:"pointer",fontSize:14,lineHeight:1}}>×</button>
-            )}
-          </div>
+        {/* Hamburger — mobile only */}
+        <button className="mmb" onClick={()=>setSidebarOpen(v=>!v)}
+          style={{background:"none",border:"1px solid var(--border2)",color:"var(--text)",width:36,height:36,borderRadius:4,cursor:"pointer",display:"none",alignItems:"center",justifyContent:"center",fontSize:18,flexShrink:0}}>
+          &#9776;
+        </button>
+
+        {/* Logo — hidden on very small screens */}
+        <span className="hd-logo" style={{fontFamily:"'Unbounded',sans-serif",fontWeight:900,fontSize:15,letterSpacing:"-0.5px",whiteSpace:"nowrap",flexShrink:0}}>
+          <span style={{color:"var(--accent)"}}>UNIT</span><span style={{color:"var(--text)"}}>CONV</span>
+        </span>
+
+        {/* GLOBAL SEARCH — always visible, fills all available space */}
+        <div style={{position:"relative",flex:1,minWidth:0}}>
+          <span style={{position:"absolute",left:10,top:"50%",transform:"translateY(-50%)",color:"var(--faint)",fontSize:14,pointerEvents:"none",zIndex:1,lineHeight:1}}>&#128269;</span>
+          <input
+            value={globalSearch}
+            onChange={e=>setGlobalSearch(e.target.value)}
+            onFocus={()=>setSearchFocused(true)}
+            onBlur={()=>setTimeout(()=>setSearchFocused(false),200)}
+            placeholder="Hledat jednotku..."
+            style={{width:"100%",background:"var(--surface2)",border:searchFocused?"1px solid var(--accent)":"1px solid var(--border2)",color:"var(--text)",fontFamily:"inherit",fontSize:15,padding:"9px 34px 9px 32px",borderRadius:4,outline:"none",transition:"border-color .15s",WebkitAppearance:"none",boxSizing:"border-box"}}
+          />
+          {globalSearch && (
+            <button onClick={()=>setGlobalSearch("")}
+              style={{position:"absolute",right:6,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",color:"var(--faint)",cursor:"pointer",fontSize:20,lineHeight:1,padding:"4px 6px"}}>
+              &#215;
+            </button>
+          )}
           {/* DROPDOWN */}
           {searchFocused && globalSearch.length >= 2 && (
-            <div style={{position:"absolute",top:"calc(100% + 4px)",left:0,right:0,background:"var(--surface2)",border:"1px solid #2a2a42",borderRadius:6,zIndex:200,maxHeight:340,overflowY:"auto",boxShadow:"0 8px 32px rgba(0,0,0,.6)"}}>
+            <div style={{position:"absolute",top:"calc(100% + 4px)",left:0,right:0,background:"var(--surface,#0b0b17)",backgroundColor:"var(--surface,#0b0b17)",border:"1px solid var(--border2,#222238)",borderRadius:6,zIndex:300,maxHeight:320,overflowY:"auto",boxShadow:"0 8px 32px rgba(0,0,0,.5)"}}>
               {globalResults.length === 0 ? (
-                <div style={{padding:"12px 14px",fontSize:12,color:"var(--faint)"}}>Nic nenalezeno</div>
+                <div style={{padding:"14px",fontSize:13,color:"var(--faint)"}}>Nic nenalezeno</div>
               ) : (
                 <>
-                  <div style={{padding:"6px 12px 4px",fontSize:9,color:"var(--dim)",letterSpacing:"0.14em",textTransform:"uppercase",borderBottom:"1px solid #1a1a2e"}}>
+                  <div style={{padding:"6px 12px 4px",fontSize:9,color:"var(--dim)",letterSpacing:"0.14em",textTransform:"uppercase",borderBottom:"1px solid var(--border)"}}>
                     {globalResults.length} výsledků
                   </div>
                   {globalResults.map(({c,u},i)=>(
                     <div key={i} onClick={()=>pickGlobal(c,u)}
                       className="sritem"
-                      style={{padding:"8px 12px",cursor:"pointer",borderBottom:"1px solid #13131f",display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
+                      style={{padding:"11px 12px",cursor:"pointer",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
                       <div style={{display:"flex",alignItems:"center",gap:8,minWidth:0}}>
-                        <span style={{fontSize:14,flexShrink:0}}>{c.icon}</span>
+                        <span style={{fontSize:16,flexShrink:0}}>{c.icon}</span>
                         <div style={{minWidth:0}}>
-                          <div style={{fontSize:12,color:"var(--text)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.label}</div>
-                          <div style={{fontSize:10,color:"var(--faint)"}}>{c.label}</div>
+                          <div style={{fontSize:14,color:"var(--text)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{u.label}</div>
+                          <div style={{fontSize:11,color:"var(--faint)"}}>{c.label}</div>
                         </div>
                       </div>
-                      <span style={{fontSize:11,color:"var(--accent)",flexShrink:0,fontWeight:500}}>{u.symbol}</span>
+                      <span style={{fontSize:12,color:"var(--accent)",flexShrink:0,fontWeight:600}}>{u.symbol}</span>
                     </div>
                   ))}
                 </>
@@ -1655,28 +1698,30 @@ function UnitConverter() {
             </div>
           )}
           {searchFocused && globalSearch.length === 1 && (
-            <div style={{position:"absolute",top:"calc(100% + 4px)",left:0,right:0,background:"var(--surface2)",border:"1px solid #2a2a42",borderRadius:6,zIndex:200,padding:"10px 14px",fontSize:11,color:"var(--faint)",boxShadow:"0 8px 32px rgba(0,0,0,.6)"}}>
+            <div style={{position:"absolute",top:"calc(100% + 4px)",left:0,right:0,background:"var(--surface,#0b0b17)",backgroundColor:"var(--surface,#0b0b17)",border:"1px solid var(--border2,#222238)",borderRadius:6,zIndex:300,padding:"12px 14px",fontSize:12,color:"var(--faint,#484860)",boxShadow:"0 8px 32px rgba(0,0,0,.5)"}}>
               Zadejte alespoň 2 znaky...
             </div>
           )}
         </div>
 
-        <div style={{display:"flex",alignItems:"center",gap:6,flexShrink:0}}>
-          <button onClick={()=>{setShowFavs(v=>!v);setShowHistory(false);}} title="Oblíbené [F]"
-            style={{background:showFavs?"var(--accent)":"var(--surface2)",border:"1px solid var(--border2)",color:showFavs?"#fff":"var(--text)",width:32,height:32,borderRadius:4,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,transition:"all .2s"}}>⭐</button>
+        {/* Action buttons */}
+        <div style={{display:"flex",alignItems:"center",gap:4,flexShrink:0}}>
+          <button onClick={()=>{setShowFavs(v=>!v);setShowHistory(false);}} title="Oblíbené"
+            style={{background:showFavs?"var(--accent)":"var(--surface2)",border:"1px solid var(--border2)",color:showFavs?"#fff":"var(--text)",width:36,height:36,borderRadius:4,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,transition:"all .2s",flexShrink:0}}>
+            &#11088;
+          </button>
           <button onClick={()=>{setShowHistory(v=>!v);setShowFavs(false);}} title="Historie"
-            style={{background:showHistory?"var(--accent)":"var(--surface2)",border:"1px solid var(--border2)",color:showHistory?"#fff":"var(--text)",width:32,height:32,borderRadius:4,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,transition:"all .2s"}}>🕐</button>
-          <button onClick={shareUrl} title="Sdílet URL"
-            style={{background:copied==="url"?"var(--accent)":"var(--surface2)",border:"1px solid var(--border2)",color:copied==="url"?"#fff":"var(--text)",width:32,height:32,borderRadius:4,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,transition:"all .2s"}}>
+            style={{background:showHistory?"var(--accent)":"var(--surface2)",border:"1px solid var(--border2)",color:showHistory?"#fff":"var(--text)",width:36,height:36,borderRadius:4,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,transition:"all .2s",flexShrink:0}}>
+            &#128336;
+          </button>
+          <button onClick={shareUrl} title="Sdílet URL" className="hd-share"
+            style={{background:copied==="url"?"var(--accent)":"var(--surface2)",border:"1px solid var(--border2)",color:copied==="url"?"#fff":"var(--text)",width:36,height:36,borderRadius:4,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,transition:"all .2s",flexShrink:0}}>
             {copied==="url"?"✓":"🔗"}
           </button>
           <button onClick={()=>setDarkMode(d=>!d)} title={darkMode?"Světlý režim":"Tmavý režim"}
-            style={{background:"var(--surface2)",border:"1px solid var(--border2)",color:"var(--text)",width:32,height:32,borderRadius:4,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,transition:"all .2s"}}>
+            style={{background:"var(--surface2)",border:"1px solid var(--border2)",color:"var(--text)",width:36,height:36,borderRadius:4,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,transition:"all .2s",flexShrink:0}}>
             {darkMode ? "☀️" : "🌙"}
           </button>
-          <span style={{fontSize:10,color:"var(--dim)",letterSpacing:"0.1em",textTransform:"uppercase",whiteSpace:"nowrap",display:"none"}} className="hd-count">
-            {CATEGORIES.length}k·{totalUnits}j
-          </span>
         </div>
       </header>
 
@@ -1749,7 +1794,7 @@ function UnitConverter() {
         </aside>
 
         {/* MAIN */}
-        <main key={st.catId} className="mna" style={{flex:1,padding:"24px 18px",maxWidth:860,overflowX:"hidden"}}>
+        <main key={st.catId} className="mna" style={{flex:1,padding:"20px 16px",maxWidth:860,overflowX:"hidden"}}>
           <div style={{marginBottom:20,display:"flex",alignItems:"center",gap:10}}>
             <span style={{fontSize:24}}>{cat.icon}</span>
             <div>
@@ -1799,8 +1844,8 @@ function UnitConverter() {
             )}
           </div>
 
-          {/* KEYBOARD HINTS */}
-          <div style={{fontSize:9,color:"var(--dim)",marginBottom:16,display:"flex",gap:12,flexWrap:"wrap"}}>
+          {/* KEYBOARD HINTS — hidden on touch devices via CSS */}
+          <div className="kbd-bar" style={{fontSize:9,color:"var(--dim)",marginBottom:16,display:"flex",gap:12,flexWrap:"wrap"}}>
             <span><kbd className="kbd">S</kbd> swap</span>
             <span><kbd className="kbd">F</kbd> focus input</span>
             <span><kbd className="kbd">C</kbd> kopírovat</span>
@@ -1839,20 +1884,24 @@ function UnitConverter() {
       </div>
 
       {/* FOOTER */}
-      <footer style={{borderTop:"1px solid var(--border)",padding:"12px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8,background:"var(--surface)"}}>
-        <span style={{fontSize:10,color:"var(--dim)",letterSpacing:"0.08em"}}>Martin Slanec &middot; 63 kategorii &middot; 560 jednotek</span>
-        <div style={{display:"flex",alignItems:"center",gap:16}}>
+      <footer style={{borderTop:"1px solid var(--border)",background:"var(--surface)",padding:"10px 16px",display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
+        <span style={{fontSize:10,color:"var(--dim)",letterSpacing:"0.06em"}}>
+          &copy; Martin Slanec &middot; 63 kategorií &middot; 560 jednotek
+        </span>
+        <div style={{display:"flex",alignItems:"center",gap:14}}>
           <a href="mailto:mslanec@gmail.com"
-            style={{fontSize:10,color:"var(--muted)",textDecoration:"none",display:"flex",alignItems:"center",gap:5,transition:"color .15s"}}
+            style={{fontSize:11,color:"var(--muted)",textDecoration:"none",display:"flex",alignItems:"center",gap:5,transition:"color .15s"}}
             onMouseEnter={e=>e.currentTarget.style.color="var(--accent)"}
             onMouseLeave={e=>e.currentTarget.style.color="var(--muted)"}>
             &#9993; mslanec@gmail.com
           </a>
-          <a href="https://www.linkedin.com/in/mslanec" target="_blank" rel="noopener noreferrer"
-            style={{fontSize:10,color:"var(--muted)",textDecoration:"none",display:"flex",alignItems:"center",gap:5,transition:"color .15s"}}
+          <a href="https://www.linkedin.com/in/martinslanec" target="_blank" rel="noopener noreferrer"
+            style={{fontSize:11,color:"var(--muted)",textDecoration:"none",display:"flex",alignItems:"center",gap:5,transition:"color .15s"}}
             onMouseEnter={e=>e.currentTarget.style.color="var(--accent)"}
             onMouseLeave={e=>e.currentTarget.style.color="var(--muted)"}>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+            </svg>
             LinkedIn
           </a>
         </div>
