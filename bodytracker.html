@@ -198,6 +198,8 @@ td{padding:8px 10px;white-space:nowrap;color:var(--text)}
         <div><label>⌛ Pas (cm)</label><input type="number" step="0.5" id="f-pas" placeholder="70.0"/></div>
         <div><label>🫁 Pod prsama (cm)</label><input type="number" step="0.5" id="f-podprsa" placeholder="75.0"/></div>
         <div><label>💪 Biceps (cm)</label><input type="number" step="0.5" id="f-biceps" placeholder="28.0"/></div>
+        <div><label>🍑 Zadek (cm)</label><input type="number" step="0.5" id="f-zadek" placeholder="100.0"/></div>
+        <div><label>👙 Prsa (cm)</label><input type="number" step="0.5" id="f-prsa" placeholder="95.0"/></div>
       </div>
       <button class="save-btn" id="save-btn" onclick="saveRecord()">Uložit měření ✨</button>
     </div>
@@ -228,9 +230,9 @@ td{padding:8px 10px;white-space:nowrap;color:var(--text)}
 <script>
 const KEY="body-tracker-v1";
 const SEED=[
-  {date:"2026-01-01",lytko:37.0,stehno:58.0,boky:99.0,pas:76.0,podprsa:80.0,biceps:30.0},
-  {date:"2026-02-01",lytko:36.5,stehno:57.0,boky:97.5,pas:74.0,podprsa:79.0,biceps:29.5},
-  {date:"2026-03-01",lytko:36.0,stehno:56.0,boky:96.0,pas:72.5,podprsa:78.0,biceps:29.0},
+  {date:"2026-01-01",lytko:37.0,stehno:58.0,boky:99.0,pas:76.0,podprsa:80.0,biceps:30.0,zadek:104.0,prsa:98.0},
+  {date:"2026-02-01",lytko:36.5,stehno:57.0,boky:97.5,pas:74.0,podprsa:79.0,biceps:29.5,zadek:102.5,prsa:97.0},
+  {date:"2026-03-01",lytko:36.0,stehno:56.0,boky:96.0,pas:72.5,podprsa:78.0,biceps:29.0,zadek:101.0,prsa:96.0},
 ];
 
 const METRICS=[
@@ -240,6 +242,8 @@ const METRICS=[
   {key:'podprsa',  label:'Pod prsama', color:'#a78bfa', emoji:'🫁', desc:'Obvod pod prsní linií'},
   {key:'lytko',    label:'Lýtko',      color:'#67e8f9', emoji:'🦵', desc:'Nejsilnější část lýtka'},
   {key:'biceps',   label:'Biceps',     color:'#fbbf24', emoji:'💪', desc:'Obvod paže ve flexi'},
+  {key:'zadek',    label:'Zadek',      color:'#f43f5e', emoji:'🍑', desc:'Nejširší část přes hýždě'},
+  {key:'prsa',     label:'Prsa',       color:'#e879f9', emoji:'👙', desc:'Obvod přes nejširší část prsou'},
 ];
 
 // Polohy teček na postavě (relativní %, střed SVG je cca 50%)
@@ -285,13 +289,15 @@ function figureSvg(){
   <svg viewBox="0 0 295 655" width="110" height="244" xmlns="http://www.w3.org/2000/svg">
     <image href="${img}" x="0" y="0" width="295" height="655"/>
     <ellipse cx="148" cy="258" rx="66" ry="28" ${hl('podprsa','#a78bfa')}/>
-    <ellipse cx="148" cy="308" rx="50" ry="26" ${hl('pas','#2dd4bf')}/>
-    <ellipse cx="148" cy="335" rx="96" ry="36" ${hl('boky','#f472b6')}/>
+    <ellipse cx="148" cy="278" rx="50" ry="26" ${hl('pas','#2dd4bf')}/>
+    <ellipse cx="148" cy="320" rx="96" ry="36" ${hl('boky','#f472b6')}/>
     <ellipse cx="102" cy="405" rx="44" ry="52" ${hl('stehno','#fb7185')}/>
     <ellipse cx="194" cy="405" rx="44" ry="52" ${hl('stehno','#fb7185')}/>
     <ellipse cx="106" cy="528" rx="28" ry="36" ${hl('lytko','#67e8f9')}/>
     <ellipse cx="190" cy="528" rx="28" ry="36" ${hl('lytko','#67e8f9')}/>
     <ellipse cx="74"  cy="235" rx="20" ry="42" ${hl('biceps','#fbbf24')}/>
+    <ellipse cx="148" cy="340" rx="96" ry="38" ${hl('zadek','#f43f5e')}/>
+    <ellipse cx="148" cy="210" rx="72" ry="34" ${hl('prsa','#e879f9')}/>
     <ellipse cx="222" cy="235" rx="20" ry="42" ${hl('biceps','#fbbf24')}/>
   </svg>
   </div>`;
@@ -303,8 +309,8 @@ function renderTop(){
   const s=sorted();
   const prev=s.length>1?s[s.length-2]:null;
 
-  const left=METRICS.slice(0,3);
-  const right=METRICS.slice(3,6);
+  const left=METRICS.slice(0,4);
+  const right=METRICS.slice(4,8);
 
   function cardHtml(m){
     const v=lat?lat[m.key]:null;
@@ -385,6 +391,8 @@ function renderChart(){
     stehno:   '<strong>Stehno</strong> — měř na nejsilnějším místě, přibližně 10–15 cm pod rozkrokem. Změny odráží jak ztrátu tuku tak nárůst svalů. Větší rozdíl mezi stehnem a lýtkem = atletičtější postava.',
     podprsa:  '<strong>Pod prsama</strong> — měř těsně pod prsní linií, obvod hrudníku. Tato hodnota se mění s hmotností a tréninkem zad. Důležitá pro výběr velikosti podprsenky (spodní číslo).',
     lytko:    '<strong>Lýtko</strong> — měř na nejsilnějším místě. Lýtka jsou geneticky podmíněná a mění se pomaleji než ostatní partie. Symetrie lýtek je dobrý ukazatel vyváženého tréninku.',
+    zadek:    '<strong>Zadek</strong> — měř v nejširším místě přes hýždě. Zpravidla se kryje s největším obvodem boků. Změny odrážejí objem hýžďového svalstva (glutes). Při silovém tréninku může obvod narůstat i při hubnutí — což je žádoucí.',
+    prsa:     '<strong>Prsa</strong> — měř v nejširší části, vodorovně přes bradavky, při normálním nádechu. Důležité pro sledování změn v oblasti hrudníku. Při hubnutí obvykle klesá, při silovém tréninku zad může narůstat.',
     biceps:   '<strong>Biceps</strong> — měř v nejvyšším bodě při mírné flexi paže. Nárůst obvodu paže odráží sílu a svalový rozvoj horní části těla. Symetrie obou paží je důležitá — měř obě a sleduj případné rozdíly.',
   };
 
@@ -441,6 +449,8 @@ function renderTable(){
       <td style="color:#2dd4bf">${r.pas??'–'}</td>
       <td style="color:#a78bfa">${r.podprsa??'–'}</td>
       <td style="color:#fbbf24">${r.biceps??'–'}</td>
+      <td style="color:#f43f5e">${r.zadek??'–'}</td>
+      <td style="color:#e879f9">${r.prsa??'–'}</td>
       <td>
         <button class="btn-sm" style="color:#9d7bb8;margin-right:3px" onclick="editRow('${r.date}')">✏️</button>
         <button class="btn-sm" style="color:#f472b6" onclick="deleteRow('${r.date}')">🗑</button>
@@ -463,7 +473,7 @@ function deleteRow(date){
 
 /* ── FORM ── */
 function fillForm(r){
-  ['date','lytko','stehno','boky','pas','podprsa','biceps'].forEach(k=>{
+  ['date','lytko','stehno','boky','pas','podprsa','biceps','zadek','prsa'].forEach(k=>{
     const el=document.getElementById('f-'+k);if(el)el.value=r[k]??'';
   });
 }
@@ -477,7 +487,8 @@ function saveRecord(){
   if(!date){alert('Vyber datum');return;}
   const n=id=>{const v=document.getElementById(id).value;return v!==''?parseFloat(v):null;};
   const entry={date,lytko:n('f-lytko'),stehno:n('f-stehno'),boky:n('f-boky'),
-               pas:n('f-pas'),podprsa:n('f-podprsa'),biceps:n('f-biceps')};
+               pas:n('f-pas'),podprsa:n('f-podprsa'),biceps:n('f-biceps'),
+               zadek:n('f-zadek'),prsa:n('f-prsa')};
   records=records.filter(r=>r.date!==date).concat(entry);
   sd(records);
   const btn=document.getElementById('save-btn');
